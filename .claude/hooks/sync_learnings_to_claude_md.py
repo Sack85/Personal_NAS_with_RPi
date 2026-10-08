@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import glob
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -41,7 +40,9 @@ def repo_root() -> Path:
 
 def load_entries(root: Path) -> list[dict]:
     entries: list[dict] = []
-    for qf in glob.glob(str(root / "**" / "memory" / "**" / "learnings-queue.jsonl"), recursive=True):
+    for qf in glob.glob(
+        str(root / "**" / "memory" / "**" / "learnings-queue.jsonl"), recursive=True
+    ):
         if "/.venv/" in qf or "/node_modules/" in qf:
             continue
         try:
@@ -149,7 +150,11 @@ def main() -> int:
     whatnot = [e for e in entries if is_negative(e["pattern"])]
 
     new_text = upsert_block(
-        text, "Aprendizajes", LEARN_START, LEARN_END, render_block(LEARN_START, LEARN_END, learnings)
+        text,
+        "Aprendizajes",
+        LEARN_START,
+        LEARN_END,
+        render_block(LEARN_START, LEARN_END, learnings),
     )
     new_text = upsert_block(
         new_text,
