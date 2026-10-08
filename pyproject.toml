@@ -29,6 +29,8 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.ruff.lint.per-file-ignores]
 # Copiado de RDEWAI casi literal; sus marcadores HTML son largos a propósito.
 ".claude/hooks/sync_learnings_to_claude_md.py" = ["E501"]
+# Comandos de shell reales como datos de prueba.
+"tests/test_ssh_guard.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
