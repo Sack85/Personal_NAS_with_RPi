@@ -1,0 +1,42 @@
+skill: validate-hld
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo pasa sin avisos
+    inputs:
+      file: architect-plugin/skills/create-hld/examples/sample-hld.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: Paridad dentro del pool
+    inputs:
+      file: HLD con la paridad "En pool = Sí"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: asks_question
+        about: sacar la paridad del pool
+    success_criteria: No se corrige en silencio; se pregunta y se registra
+
+  - id: TC-003
+    name: Falta el overlay de 32 bits
+    inputs:
+      file: HLD con HAT Penta y sin dtoverlay=pcie-32bit-dma-pi5
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: content_contains
+        text: dtoverlay=pcie-32bit-dma-pi5
+    success_criteria: La línea se añade y se explica por qué
+
+  - id: TC-004
+    name: SSH expuesto
+    inputs:
+      file: HLD con "| 22 | SSH | Sí |"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se propone Tailscale y se deja "No"

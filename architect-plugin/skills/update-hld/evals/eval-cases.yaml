@@ -1,0 +1,50 @@
+skill: update-hld
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Disco de 2 TB aprobado en un DCP pasa a paridad
+    inputs:
+      hld: HLD v1 Aprobado
+      dcp: DCP aprobado "añadir Seagate 2 TB"
+    expected:
+      - type: file_created
+        pattern: outputs/hld/v2/HLD-*.md
+      - type: content_contains
+        text: "| Paridad | Seagate"
+      - type: content_contains
+        text: ADR-007
+      - type: validation_pass
+    success_criteria: HLD v1 intacto; v2 En revisión con el WD como dato y ADR nuevo
+
+  - id: TC-002
+    name: Cambio sin DCP aprobado se bloquea
+    inputs:
+      change: "pon el disco nuevo"
+      dcp: DCP en Borrador
+    expected:
+      - type: stops_with_message
+        text: approve-dcp
+      - type: no_output_generated
+    success_criteria: No edita el HLD
+
+  - id: TC-003
+    name: Ajuste menor el mismo día
+    inputs:
+      change: espacio libre mínimo de MergerFS a 30G
+    expected:
+      - type: content_contains
+        text: "| Espacio libre mínimo | 30G |"
+      - type: status_is
+        value: En revisión
+    success_criteria: Solo Edit, versión menor +1 y fila en el historial
+
+  - id: TC-004
+    name: NRD nuevo aprobado obliga a versión nueva
+    inputs:
+      nrd: NRD v2 Aprobado (acceso exterior)
+    expected:
+      - type: content_contains
+        text: NRD v2 (2.0, Aprobado)
+      - type: section_present
+        section: Seguridad
+    success_criteria: Revisa puertos y seguridad; registra ADR de acceso exterior
