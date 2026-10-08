@@ -1,0 +1,30 @@
+skill: update-dcp
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Ejecución interrumpida tras mover la paridad
+    inputs:
+      ops: OPS Parcial, pasos 1-6 OK
+    expected:
+      - type: file_created
+        pattern: outputs/dcp/v2/DCP-*.md
+      - type: content_contains
+        text: "| Paridad | WD Red Plus | 2 TB |"
+    success_criteria: El plan nuevo parte del estado real comprobado con lecturas
+
+  - id: TC-002
+    name: Otro disco distinto del previsto
+    inputs:
+      change: llega un disco de 1,8 TB en vez de 2 TB
+    expected:
+      - type: validation_pass
+    success_criteria: Recalcula la disposición en bytes y mantiene la regla de paridad
+
+  - id: TC-003
+    name: Pasa de preventiva a fallo
+    inputs:
+      change: D1 ha muerto antes de ejecutar el plan
+    expected:
+      - type: stops_with_message
+        text: desactivar el sync programado
+    success_criteria: Cambia el escenario y reordena para fix antes de sync

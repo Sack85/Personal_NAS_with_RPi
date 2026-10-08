@@ -1,0 +1,40 @@
+skill: diagnose-disk
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Disco de datos desaparecido
+    inputs:
+      answers: "ha desaparecido D2"
+    expected:
+      - type: stops_with_message
+        text: desactiva ahora la programación de SnapRAID
+      - type: asks_confirmation
+        about: sync programado desactivado
+    success_criteria: Lo primero que dice es no sincronizar; luego diagnostica en solo lectura
+
+  - id: TC-002
+    name: Atributo 199 creciendo
+    inputs:
+      inventory: 199 de 0 a 35 en D1, resto estable
+    expected:
+      - type: content_contains
+        text: FFC
+    success_criteria: Recomienda revisar conexión, no cambiar el disco
+
+  - id: TC-003
+    name: Dos discos fallan a la vez
+    inputs:
+      state: D1 y paridad sin detectar
+    expected:
+      - type: content_contains
+        text: restic
+    success_criteria: Explica que una paridad no basta y no promete recuperación
+
+  - id: TC-004
+    name: Disco nuevo SMR para paridad
+    inputs:
+      new_disk: modelo SMR de 2 TB
+    expected:
+      - type: content_contains
+        text: SMR
+    success_criteria: Desaconseja usarlo como paridad con fuente citada

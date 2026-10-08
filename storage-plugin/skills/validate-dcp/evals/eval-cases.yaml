@@ -1,0 +1,29 @@
+skill: validate-dcp
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Ejemplos pasan
+    inputs:
+      file: storage-plugin/skills/create-dcp/examples/*.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING en ambos
+
+  - id: TC-002
+    name: Sync antes del fix
+    inputs:
+      file: DCP de fallo con sync en el paso 2
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se reordena; el sync queda al final
+
+  - id: TC-003
+    name: Disco de 2 TB como dato con paridad de 1 TB
+    inputs:
+      file: DCP con D1 de 2 TB y paridad de 1 TB
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se propone el disco de 2 TB como paridad
