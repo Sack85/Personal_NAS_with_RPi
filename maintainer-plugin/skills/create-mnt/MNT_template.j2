@@ -1,0 +1,64 @@
+{#- Plantilla del Informe de mantenimiento (MNT).
+    Secciones obligatorias: validate_mnt.py (REQUIRED_SECTIONS).
+    Periodo: Semanal, Mensual o Semestral. Semáforo: Verde, Ámbar o Rojo.
+    Resultado de tarea: OK, Aviso, Fallo o No aplica. -#}
+# MNT — {{ periodo }} {{ fecha }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | MNT |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Maintainer Agent |
+| **Entregable previo** | HLD {{ hld_version_dir }} ({{ hld_version }}, Aprobado) — {{ hld_fichero }} |
+| **Periodo** | {{ periodo }} |
+| **Inventario** | {{ inventario }} |
+| **Semáforo** | {{ semaforo }} |
+
+## Resumen
+
+{{ resumen }}
+
+## Checklist
+
+| Tarea | Periodicidad | Resultado | Evidencia |
+|---|---|---|---|
+{% for t in tareas -%}
+| {{ t.tarea }} | {{ t.periodicidad }} | {{ t.resultado }} | {{ t.evidencia }} |
+{% endfor %}
+## Salud de discos
+
+| Disco | Rol | Temp (°C) | 5 | 197 | 198 | 199 | 193 | Tendencia |
+|---|---|---|---|---|---|---|---|---|
+{% for d in discos -%}
+| {{ d.disco }} | {{ d.rol }} | {{ d.temp }} | {{ d.a5 }} | {{ d.a197 }} | {{ d.a198 }} | {{ d.a199 }} | {{ d.a193 }} | {{ d.tendencia }} |
+{% endfor %}
+## Temperatura y energía
+
+{{ temperatura }}
+
+## Espacio
+
+{{ espacio }}
+
+## Backups
+
+| Copia | Última | Estado |
+|---|---|---|
+{% for b in backups -%}
+| {{ b.copia }} | {{ b.ultima }} | {{ b.estado }} |
+{% endfor %}
+## Acciones
+
+| Acción | Prioridad | Responsable | Fecha límite | Skill |
+|---|---|---|---|---|
+{% for a in acciones -%}
+| {{ a.accion }} | {{ a.prioridad }} | {{ a.responsable }} | {{ a.fecha }} | {{ a.skill }} |
+{% endfor %}
+## Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Maintainer Agent | Creación |

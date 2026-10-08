@@ -1,0 +1,49 @@
+# Inventario de ejemplo un mes después: hay kernel y OMV nuevos pendientes y D1 empieza a fallar
+fecha: "2026-12-01"
+sistema:
+  os: Debian GNU/Linux 13 (trixie)
+  kernel: 6.12.47+rpt-rpi-2712
+  firmware_eeprom: "2026-09-15"
+  uptime_dias: 48
+paquetes:
+  openmediavault: 8.0.12-1
+  openmediavault-snapraid: 8.0.3
+  openmediavault-mergerfs: 8.0.2
+  openmediavault-compose: 8.1.0
+  openmediavault-nut: 8.0.1
+  snapraid: "12.4"
+  mergerfs: 2.40.2
+  restic: 0.18.0
+  hd-idle: "1.21"
+  docker-ce: 5:28.1.1
+contenedores:
+  nextcloud-aio-mastercontainer: v11.6.1
+pendientes:
+  - {paquete: linux-image-rpi-2712, actual: 6.12.47, nueva: 6.12.55}
+  - {paquete: openmediavault, actual: 8.0.12-1, nueva: 8.1.0-1}
+salud:
+  pcie_enlace: 8GT/s
+  throttled: "0x0"
+  temp_cpu_c: 53.5
+  pool_uso_pct: 61
+  snapraid:
+    ultimo_sync: "2026-12-01 04:15"
+    errores: 0
+  backup_aio: "2026-12-01 03:22 correcto"
+  restic_ultimo: "2026-11-02"
+  discos:
+    - rol: paridad
+      modelo: WDC WD10EZEX
+      serie: WD-WCC6Y0XXXXXX
+      temp_c: 37
+      smart: {5: 0, 193: 1240, 197: 0, 198: 0, 199: 0}
+    - rol: d1
+      modelo: TOSHIBA MK1059GSM
+      serie: Z0XXXXXXX
+      temp_c: 41
+      smart: {5: 8, 193: 154900, 197: 2, 198: 0, 199: 0}
+    - rol: d2
+      modelo: Samsung SSD 870 QVO
+      serie: S5XXXXXXXXXX
+      temp_c: 31
+      smart: {5: 0, 177: 97, 199: 0}

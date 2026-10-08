@@ -26,6 +26,11 @@
       "name": "operator-plugin",
       "source": "./operator-plugin",
       "description": "Operador: ejecuta RBK/UPD/DCP aprobados y registra cada paso (OPS)"
+    },
+    {
+      "name": "maintainer-plugin",
+      "source": "./maintainer-plugin",
+      "description": "Mantenedor: inventario, planes de actualización (UPD) e informes de mantenimiento (MNT)"
     }
   ]
 }

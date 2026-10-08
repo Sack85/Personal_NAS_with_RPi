@@ -47,7 +47,7 @@ READONLY = re.compile(
     r"cat|head|tail|grep|egrep|zgrep|ls|stat|wc|sort|uniq|cut|tr|column|which|id|whoami|date|"
     r"findmnt|ip|ss|ps|top\s+-bn1|vmstat|iostat|sensors|journalctl|dmesg|readlink|realpath|"
     r"sha256sum|md5sum|true|echo|printf|test|vcgencmd|upsc|"
-    r"smartctl\s+(-[aAiHlxc]|--all|--info|--health|--xall|--attributes)|"
+    r"smartctl\s+(-n\s+\w+\s+)?(-[aAiHlxc]|--all|--info|--health|--xall|--attributes)|"
     r"hdparm\s+-[CI]|tune2fs\s+-l|dumpe2fs\s+-h|"
     r"systemctl\s+(status|is-active|is-enabled|is-failed|list-units|list-timers|show|cat)|"
     r"snapraid\b.*\b(status|diff|list|smart|devices)\b|"
@@ -95,6 +95,8 @@ def _split_unquoted(command: str) -> list[str]:
             depth += 1
         elif c == ")" and depth:
             depth -= 1
+        elif c == "&" and (command[i - 1 : i] in "<>" or command[i + 1 : i + 2] == ">"):
+            pass  # redirecciones 2>&1, &>fichero
         elif depth == 0 and c in ";|&\n":
             parts.append("".join(buf))
             buf = []
@@ -106,8 +108,20 @@ def _split_unquoted(command: str) -> list[str]:
     return parts
 
 
+SHELL_KEYWORD = re.compile(r"^(do|then|else|if|while|until|!)\s+")
+SHELL_SYNTAX = re.compile(r"^(for\s+\w+\s+in\b.*|done|fi|esac|\{|\})$")
+
+
 def _segments(command: str) -> list[str]:
-    return [s for s in (strip_command_prefixes(x) for x in _split_unquoted(command)) if s]
+    """Comandos simples, sin prefijos (sudo…) ni sintaxis de shell (for/do/done/if…)."""
+    out = []
+    for part in _split_unquoted(command):
+        seg = strip_command_prefixes(part)
+        while SHELL_KEYWORD.match(seg):
+            seg = strip_command_prefixes(SHELL_KEYWORD.sub("", seg, count=1))
+        if seg and not SHELL_SYNTAX.match(seg):
+            out.append(seg)
+    return out
 
 
 def _remote_command(segment: str) -> str | None:

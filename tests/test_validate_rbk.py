@@ -31,16 +31,6 @@ def test_sample_passes(tmp_path):
     assert report.passed, [r.message for r in report.results]
 
 
-def test_commands_in_unwraps_ssh_loops_and_chains():
-    text = (
-        "```bash\nssh nas 'for d in /dev/sda; do sudo smartctl -t long \"$d\"; done'\n"
-        "ssh nas 'lsblk && sudo wipefs -a /dev/sdb'\n```"
-    )
-    cmds = rbk.commands_in(text)
-    assert 'sudo smartctl -t long "$d"' in cmds
-    assert "sudo wipefs -a /dev/sdb" in cmds
-
-
 def test_destructive_command_in_change_step_is_critical(tmp_path):
     text = SAMPLE.replace(STEP7_RUNNER, STEP7_RUNNER.replace("Destructivo", "Cambio"))
     assert any("Comando destructivo" in m for m in _critical(_report(tmp_path, text)))

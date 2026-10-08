@@ -22,6 +22,12 @@ guard = load_module(SHARED / "hooks" / "ssh_guard.py")
         "ssh nas 'sudo hdparm -C /dev/sdb'",
         "ssh -p 22 nas docker ps",
         "ssh nas cat /boot/firmware/config.txt",
+        "ssh nas 'sudo smartctl -n standby -A /dev/sdb'",
+        'ssh nas \'for d in /dev/sd?; do sudo hdparm -C "$d"; sudo smartctl -n standby -i -A "$d"; done\'',
+        "ssh nas 'docker logs --tail 20 nextcloud-aio-borgbackup 2>&1'",
+        "ssh nas 'cat /etc/os-release | grep PRETTY_NAME; uname -r; uptime; sudo rpi-eeprom-update'",
+        "ssh nas 'df -h /srv/mergerfs/pool; sudo snapraid -c /etc/snapraid/omv-snapraid-*.conf status | tail -8'",
+        "ssh nas 'if test -f /etc/default/hd-idle; then cat /etc/default/hd-idle; fi'",
     ],
 )
 def test_reads_are_allowed(command):
@@ -41,6 +47,8 @@ def test_reads_are_allowed(command):
         "ssh nas sudo nano /etc/default/hd-idle",
         "scp state/config/hd-idle nas:/tmp/hd-idle",
         "ssh nas 'sudo mount /dev/disk/by-label/backup /mnt/backup'",
+        "ssh nas 'sudo apt-get update -qq && apt list --upgradable 2>/dev/null'",
+        "ssh nas 'for d in /dev/sd?; do sudo smartctl -t short \"$d\"; done'",
     ],
 )
 def test_state_changes_ask(command):
@@ -64,6 +72,8 @@ def test_state_changes_ask(command):
         "sudo mkfs.ext4 /dev/sdb1",
         "echo x > /dev/sda",
         "ssh nas sudo bash <<'EOF'\nlsblk\nwipefs -a /dev/sdb\nEOF",
+        "ssh nas 'for d in /dev/sdb /dev/sdc; do sudo wipefs -a \"$d\"; done'",
+        "ssh nas 'lsblk 2>&1 && sudo mkfs.ext4 /dev/sdb1'",
     ],
 )
 def test_destructive_is_denied(command):

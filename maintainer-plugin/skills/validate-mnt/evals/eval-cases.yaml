@@ -1,0 +1,29 @@
+skill: validate-mnt
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo pasa
+    inputs:
+      file: maintainer-plugin/skills/create-mnt/examples/sample-mnt.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: Disco degradándose sin acción
+    inputs:
+      file: MNT sin acción de storage-plugin
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se añade la acción hacia /storage-plugin:diagnose-disk
+
+  - id: TC-003
+    name: Verde con un Fallo
+    inputs:
+      file: MNT Verde con SMART en Fallo
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se corrige el semáforo, no el Fallo

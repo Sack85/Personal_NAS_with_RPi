@@ -1,0 +1,94 @@
+{#- Plantilla del Plan de actualización (UPD).
+    Secciones obligatorias: validate_upd.py (REQUIRED_SECTIONS).
+    Los pasos siguen las mismas reglas que los runbooks (### Paso N: con Riesgo, Ejecuta, Dónde,
+    Comprobación previa si es destructivo, Comando, Esperado, Si falla). -#}
+# UPD — {{ titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | UPD |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Maintainer Agent |
+| **Entregable previo** | HLD {{ hld_version_dir }} ({{ hld_version }}, Aprobado) — {{ hld_fichero }} |
+| **Inventario** | {{ inventario }} |
+| **Inventario anterior** | {{ inventario_anterior }} |
+| **Ventana** | {{ ventana }} |
+| **Riesgo máximo** | {{ riesgo_maximo }} |
+
+## Resumen
+
+{{ resumen }}
+
+## Cambios disponibles
+
+| Componente | Versión actual | Versión nueva | Tipo | Fuente | Riesgo |
+|---|---|---|---|---|---|
+{% for c in cambios -%}
+| {{ c.componente }} | {{ c.actual }} | {{ c.nueva }} | {{ c.tipo }} | {{ c.fuente }} | {{ c.riesgo }} |
+{% endfor %}
+## Impacto en el diseño
+
+| Cambio | Afecta a (HLD) | Riesgo | Mitigación |
+|---|---|---|---|
+{% for i in impacto -%}
+| {{ i.cambio }} | {{ i.hld }} | {{ i.riesgo }} | {{ i.mitigacion }} |
+{% endfor %}
+## Decisión
+
+| Componente | Decisión | Motivo |
+|---|---|---|
+{% for d in decisiones -%}
+| {{ d.componente }} | {{ d.decision }} | {{ d.motivo }} |
+{% endfor %}
+## Precondiciones
+
+{% for p in precondiciones -%}
+- [ ] {{ p }}
+{% endfor %}
+## Pasos
+{% for paso in pasos %}
+### Paso {{ loop.index }}: {{ paso.titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | {{ paso.riesgo }} |
+| **Ejecuta** | {{ paso.ejecuta }} |
+| **Dónde** | {{ paso.donde }} |
+
+{% if paso.previa %}Comprobación previa:
+
+```bash
+{{ paso.previa }}
+```
+
+{% endif %}{% if paso.comando %}Comando:
+
+```bash
+{{ paso.comando }}
+```
+
+{% endif %}{% if paso.instrucciones %}{{ paso.instrucciones }}
+
+{% endif %}Esperado: {{ paso.esperado }}
+
+Si falla: {{ paso.si_falla }}
+{% endfor %}
+## Verificación posterior
+
+| Comprobación | Comando | Esperado |
+|---|---|---|
+{% for v in verificacion -%}
+| {{ v.comprobacion }} | `{{ v.comando }}` | {{ v.esperado }} |
+{% endfor %}
+## Vuelta atrás
+
+{{ vuelta_atras }}
+
+## Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Maintainer Agent | Creación |

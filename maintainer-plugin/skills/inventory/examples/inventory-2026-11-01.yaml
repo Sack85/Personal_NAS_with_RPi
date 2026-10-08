@@ -1,0 +1,47 @@
+# Inventario de ejemplo (formato que escribe /maintainer-plugin:inventory)
+fecha: "2026-11-01"
+sistema:
+  os: Debian GNU/Linux 13 (trixie)
+  kernel: 6.12.47+rpt-rpi-2712
+  firmware_eeprom: "2026-09-15"
+  uptime_dias: 18
+paquetes:
+  openmediavault: 8.0.12-1
+  openmediavault-snapraid: 8.0.3
+  openmediavault-mergerfs: 8.0.2
+  openmediavault-compose: 8.1.0
+  openmediavault-nut: 8.0.1
+  snapraid: "12.4"
+  mergerfs: 2.40.2
+  restic: 0.18.0
+  hd-idle: "1.21"
+  docker-ce: 5:28.1.1
+contenedores:
+  nextcloud-aio-mastercontainer: v11.4.0
+pendientes: []
+salud:
+  pcie_enlace: 8GT/s
+  throttled: "0x0"
+  temp_cpu_c: 51.0
+  pool_uso_pct: 58
+  snapraid:
+    ultimo_sync: "2026-11-01 04:12"
+    errores: 0
+  backup_aio: "2026-11-01 03:20 correcto"
+  restic_ultimo: "2026-10-05"
+  discos:
+    - rol: paridad
+      modelo: WDC WD10EZEX
+      serie: WD-WCC6Y0XXXXXX
+      temp_c: 36
+      smart: {5: 0, 193: 1203, 197: 0, 198: 0, 199: 0}
+    - rol: d1
+      modelo: TOSHIBA MK1059GSM
+      serie: Z0XXXXXXX
+      temp_c: 38
+      smart: {5: 0, 193: 148230, 197: 0, 198: 0, 199: 0}
+    - rol: d2
+      modelo: Samsung SSD 870 QVO
+      serie: S5XXXXXXXXXX
+      temp_c: 31
+      smart: {5: 0, 177: 98, 199: 0}
