@@ -1,0 +1,48 @@
+skill: update-nrd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Nueva medición el mismo día edita en el sitio
+    inputs:
+      existing: outputs/nrd/v1/NRD-2026-10-08-nas-familiar.md
+      change: Fotos mide 410 GB
+    expected:
+      - type: content_contains
+        text: "| 1.1 |"
+      - type: status_is
+        value: En revisión
+      - type: validation_pass
+    success_criteria: Solo cambia la fila de Fotos, la capacidad y el historial
+
+  - id: TC-002
+    name: Cambio de fondo sobre un NRD aprobado crea v2 y conserva v1
+    inputs:
+      existing: outputs/nrd/v1/NRD-2026-10-08-nas-familiar.md (Aprobado)
+      change: se añade acceso exterior publicando 443
+    expected:
+      - type: file_created
+        pattern: outputs/nrd/v2/NRD-*.md
+      - type: content_contains
+        text: "| 2.0 |"
+      - type: asks_question
+        about: qué usuarios acceden desde fuera y con verificación en dos pasos
+    success_criteria: v1 sigue intacto y Aprobado; se avisa de revisar el HLD
+
+  - id: TC-003
+    name: Petición vaga de cambio de disco
+    inputs:
+      change: "cambia el disco"
+    expected:
+      - type: asks_question
+        about: qué disco sale, cuál entra, tamaño y estado SMART
+      - type: no_output_generated
+    success_criteria: No edita nada hasta tener los datos concretos
+
+  - id: TC-004
+    name: Contradicción con el NRD existente
+    inputs:
+      change: Videos pasa a ser irreemplazable
+    expected:
+      - type: asks_confirmation
+        about: backup offline de Videos y espacio en el disco de backup
+    success_criteria: Revisa el impacto en protección de datos y capacidad del backup
