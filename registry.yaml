@@ -18,3 +18,10 @@ plugins:
         name: Requisitos del NAS
         prefix: NRD
         upstream: []
+  architect-plugin:
+    role: Arquitecto
+    deliverables:
+      hld:
+        name: Diseño de alto nivel
+        prefix: HLD
+        upstream: [nrd]

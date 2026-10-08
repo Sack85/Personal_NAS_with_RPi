@@ -17,6 +17,7 @@ Idioma de los entregables y de las skills: español.
 | Plugin | Entregable | Lee (Aprobado) |
 |---|---|---|
 | `requirements-plugin` | NRD — requisitos del NAS (`outputs/nrd/`) | `inputs/nrd/vN/` |
+| `architect-plugin` | HLD — diseño y ADR (`outputs/hld/`) | NRD |
 
 Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approve-<abbr>`,
 `apply-learnings`.

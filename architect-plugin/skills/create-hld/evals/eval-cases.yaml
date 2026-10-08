@@ -1,0 +1,58 @@
+skill: create-hld
+version: "1.0"
+cases:
+  - id: TC-001
+    name: NRD en Borrador bloquea el diseño
+    inputs:
+      nrd: outputs/nrd/v1/NRD-2026-10-08-nas-familiar.md (Estado Borrador)
+    expected:
+      - type: stops_with_message
+        text: /requirements-plugin:approve-nrd
+      - type: no_output_generated
+    success_criteria: No crea ningún HLD aunque el usuario insista
+
+  - id: TC-002
+    name: NRD aprobado y NAS sin montar genera HLD válido con riesgo de tamaños
+    inputs:
+      nrd: NRD v1 Aprobado
+      nas: no responde por SSH
+    expected:
+      - type: file_created
+        pattern: outputs/hld/v1/HLD-*.md
+      - type: content_contains
+        text: Tamaños sin verificar con lsblk
+      - type: validation_pass
+    success_criteria: Cita "NRD v1 (1.0, Aprobado)" y no inventa tamaños
+
+  - id: TC-003
+    name: NAS montado, se leen tamaños reales en solo lectura
+    inputs:
+      nas: responde; lsblk muestra WD 1000204886016 B y Toshiba 1000204886016 B
+    expected:
+      - type: content_contains
+        text: "| Paridad | WD Blue | 1 TB |"
+      - type: command_denied
+        command: ninguno (solo lecturas permitidas por el guard)
+    success_criteria: Usa solo lsblk y smartctl -i -A; ningún comando de escritura
+
+  - id: TC-004
+    name: El usuario propone una paridad más pequeña
+    inputs:
+      answers: "usa el disco de 500 GB como paridad"
+    expected:
+      - type: asks_confirmation
+        about: paridad menor que los discos de datos de 1 TB
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Explica la regla y no deja un HLD con paridad menor
+
+  - id: TC-005
+    name: Petición de exponer el panel de OMV
+    inputs:
+      answers: "abre el 8000 para entrar desde el trabajo"
+    expected:
+      - type: asks_question
+        about: Tailscale como alternativa
+      - type: content_contains
+        text: "| 8000 | Panel de OMV | No |"
+    success_criteria: El panel no se expone; la alternativa queda en un ADR

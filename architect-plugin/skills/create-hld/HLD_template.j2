@@ -1,0 +1,127 @@
+{#- Plantilla del Diseño de Alto Nivel (HLD) del NAS.
+    Secciones obligatorias y su orden: validate_hld.py (REQUIRED_SECTIONS).
+    Las tablas de Almacenamiento, Puertos y ADR las lee el validador por el nombre de columna:
+    no cambies las cabeceras. -#}
+# HLD — {{ titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | HLD |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Architect Agent |
+| **Entregable previo** | NRD {{ nrd_version_dir }} ({{ nrd_version }}, Aprobado) — {{ nrd_fichero }} |
+
+## Resumen
+
+{{ resumen }}
+
+## 1. Requisitos cubiertos
+
+| Requisito (NRD) | Cómo se cubre | Sección del HLD |
+|---|---|---|
+{% for t in trazabilidad -%}
+| {{ t.requisito }} | {{ t.cobertura }} | {{ t.seccion }} |
+{% endfor %}
+## 2. Hardware y montaje
+
+| Pieza | Modelo | Función |
+|---|---|---|
+{% for h in hardware -%}
+| {{ h.pieza }} | {{ h.modelo }} | {{ h.funcion }} |
+{% endfor %}
+{{ montaje }}
+
+## 3. Sistema y arranque
+
+{{ sistema }}
+
+```
+{{ config_txt }}
+```
+
+## 4. Red y puertos
+
+{{ red }}
+
+| Puerto | Servicio | Expuesto a Internet |
+|---|---|---|
+{% for p in puertos -%}
+| {{ p.puerto }} | {{ p.servicio }} | {{ p.expuesto }} |
+{% endfor %}
+## 5. Almacenamiento
+
+| Rol | Disco | Tamaño | Conexión | Sistema de ficheros | Montaje | En pool | Content |
+|---|---|---|---|---|---|---|---|
+{% for d in discos -%}
+| {{ d.rol }} | {{ d.disco }} | {{ d.tamano }} | {{ d.conexion }} | {{ d.fs }} | {{ d.montaje }} | {{ d.en_pool }} | {{ d.content }} |
+{% endfor %}
+### SnapRAID
+
+| Parámetro | Valor |
+|---|---|
+{% for s in snapraid -%}
+| {{ s.parametro }} | {{ s.valor }} |
+{% endfor %}
+### MergerFS
+
+| Parámetro | Valor |
+|---|---|
+{% for m in mergerfs -%}
+| {{ m.parametro }} | {{ m.valor }} |
+{% endfor %}
+## 6. Servicios y carpetas
+
+{{ servicios }}
+
+| Carpeta | Ubicación | Grupo familia | Backup offline |
+|---|---|---|---|
+{% for c in carpetas -%}
+| {{ c.nombre }} | {{ c.ubicacion }} | {{ c.permiso }} | {{ c.backup }} |
+{% endfor %}
+## 7. Protección de datos y backups
+
+| Escenario (NRD) | Mecanismo | RPO resultante | Cómo se recupera |
+|---|---|---|---|
+{% for e in proteccion -%}
+| {{ e.escenario }} | {{ e.mecanismo }} | {{ e.rpo }} | {{ e.recuperacion }} |
+{% endfor %}
+## 8. Seguridad
+
+{% for s in seguridad -%}
+- {{ s }}
+{% endfor %}
+## 9. Energía y temperatura
+
+{{ energia }}
+
+## 10. Actualizaciones y mantenimiento
+
+{{ actualizaciones }}
+
+| Componente | Cómo se actualiza | Qué comprobar después |
+|---|---|---|
+{% for c in componentes -%}
+| {{ c.componente }} | {{ c.como }} | {{ c.comprobar }} |
+{% endfor %}
+## 11. Decisiones de arquitectura (ADR)
+
+| ID | Decisión | Alternativas descartadas | Motivo | Requisito |
+|---|---|---|---|---|
+{% for a in adrs -%}
+| {{ a.id }} | {{ a.decision }} | {{ a.alternativas }} | {{ a.motivo }} | {{ a.requisito }} |
+{% endfor %}
+## 12. Riesgos
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
+|---|---|---|---|
+{% for r in riesgos -%}
+| {{ r.riesgo }} | {{ r.probabilidad }} | {{ r.impacto }} | {{ r.mitigacion }} |
+{% endfor %}
+## 13. Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Architect Agent | Creación |
