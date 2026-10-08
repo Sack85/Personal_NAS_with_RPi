@@ -135,8 +135,10 @@ _Ninguno todavía._
 
 ## Paso 4: Registrar
 
-1. `registry.yaml`: rol, entregables, prefijo y entregables previos.
-2. `.claude-plugin/marketplace.json`: `{"name": "{plugin}", "source": "./{plugin}", "description": "…"}`.
+1. `registry.yaml`: rol, entregables, prefijo y entregables previos. Se añade **en la primera
+   etapa con `wip: true`** (así `make sync` copia los scripts y los tests de estructura lo
+   ignoran mientras se construye); en la última etapa se quita `wip`.
+2. `.claude-plugin/marketplace.json` (última etapa): `{"name": "{plugin}", "source": "./{plugin}", "description": "…"}`.
 3. `.claude/settings.json` → `enabledPlugins`: `"{plugin}@nas2rbpi-plugins": true`.
 4. `CLAUDE.md`: fila en la tabla de roles y sección del plugin.
 5. `make sync`.

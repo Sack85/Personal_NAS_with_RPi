@@ -1,0 +1,39 @@
+{
+  "description": "Requisitos: guard SSH, validación del NRD, secretos y cola de learnings",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/ssh_guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_output_hook.py nrd skills/validate-nrd/scripts/validate_nrd.py",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/secrets_guard.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check_learnings_queue.py requirements-plugin nrd",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

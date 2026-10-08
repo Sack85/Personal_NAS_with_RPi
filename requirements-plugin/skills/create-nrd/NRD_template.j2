@@ -1,0 +1,105 @@
+{#- Plantilla del Documento de Requisitos del NAS (NRD).
+    Las secciones y su orden son obligatorios (validate_nrd.py: REQUIRED_SECTIONS).
+    Las tablas deben tener filas de datos; si falta un dato, usa
+    [PENDIENTE: qué — responsable: X, fecha: AAAA-MM-DD]. -#}
+# NRD — {{ titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | NRD |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Requirements Agent |
+| **Responsable** | {{ responsable }} |
+| **Fuentes** | {{ fuentes | join(", ") }} |
+
+## Resumen
+
+{{ resumen }}
+
+## 1. Contexto y objetivos
+
+{{ contexto }}
+
+| Objetivo | Medida de éxito |
+|---|---|
+{% for o in objetivos -%}
+| {{ o.objetivo }} | {{ o.medida }} |
+{% endfor %}
+## 2. Usuarios y dispositivos
+
+| Usuario | Dispositivos | Uso principal | Acceso desde fuera |
+|---|---|---|---|
+{% for u in usuarios -%}
+| {{ u.nombre }} | {{ u.dispositivos }} | {{ u.uso }} | {{ u.exterior }} |
+{% endfor %}
+## 3. Datos y capacidad
+
+| Carpeta | Contenido | Volumen actual (GB) | Crecimiento anual (GB) | Criticidad | Fuente del dato |
+|---|---|---|---|---|---|
+{% for c in carpetas -%}
+| {{ c.nombre }} | {{ c.contenido }} | {{ c.volumen }} | {{ c.crecimiento }} | {{ c.criticidad }} | {{ c.fuente }} |
+{% endfor %}
+Capacidad necesaria a {{ horizonte_anos }} años: {{ capacidad_necesaria }} GB.
+
+## 4. Servicios
+
+| Servicio | Para qué | Usuarios | Prioridad |
+|---|---|---|---|
+{% for s in servicios -%}
+| {{ s.nombre }} | {{ s.para_que }} | {{ s.usuarios }} | {{ s.prioridad }} |
+{% endfor %}
+## 5. Protección de datos
+
+| Escenario | Datos afectados | RPO | RTO | Cómo se cubre |
+|---|---|---|---|---|
+{% for e in escenarios -%}
+| {{ e.escenario }} | {{ e.datos }} | {{ e.rpo }} | {{ e.rto }} | {{ e.cobertura }} |
+{% endfor %}
+## 6. Entorno y restricciones
+
+| Restricción | Valor |
+|---|---|
+{% for r in restricciones -%}
+| {{ r.nombre }} | {{ r.valor }} |
+{% endfor %}
+### Hardware disponible
+
+| Pieza | Modelo | Estado conocido |
+|---|---|---|
+{% for h in hardware -%}
+| {{ h.pieza }} | {{ h.modelo }} | {{ h.estado }} |
+{% endfor %}
+## 7. Seguridad y acceso
+
+{% for regla in seguridad -%}
+- {{ regla }}
+{% endfor %}
+## 8. Operación y mantenimiento
+
+| Tema | Requisito |
+|---|---|
+{% for op in operacion -%}
+| {{ op.tema }} | {{ op.requisito }} |
+{% endfor %}
+## 9. Supuestos y preguntas abiertas
+
+### Supuestos
+
+{% for s in supuestos -%}
+- {{ s }}
+{% endfor %}
+### Preguntas abiertas
+
+| Pregunta | Responsable | Fecha límite |
+|---|---|---|
+{% for p in preguntas -%}
+| {{ p.pregunta }} | {{ p.responsable }} | {{ p.fecha }} |
+{% endfor %}
+## 10. Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Requirements Agent | Creación |

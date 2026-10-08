@@ -28,5 +28,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "requirements-plugin@nas2rbpi-plugins": true
   }
 }

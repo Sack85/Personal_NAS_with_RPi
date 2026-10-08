@@ -1,0 +1,62 @@
+skill: create-nrd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Guía completa y respuestas concretas generan un NRD válido
+    inputs:
+      folder: inputs/nrd/v1
+      answers: volúmenes medidos con du, 3 usuarios, Tailscale, presupuesto 150 €
+    expected:
+      - type: asks_question
+        about: volumen medido de Documentos y Fotos
+      - type: file_created
+        pattern: outputs/nrd/v1/NRD-*.md
+      - type: validation_pass
+      - type: status_is
+        value: Borrador
+    success_criteria: NRD con las 11 secciones, 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: Respuesta vaga sobre espacio provoca repregunta
+    inputs:
+      folder: inputs/nrd/v1
+      answers: "Necesito mucho espacio"
+    expected:
+      - type: asks_question
+        about: GB por carpeta medidos con du -sh o el Explorador
+      - type: no_vague_language
+    success_criteria: No acepta "mucho espacio" y no escribe el NRD sin cifras
+
+  - id: TC-003
+    name: Sin medición posible se marca Estimado y se abre pregunta
+    inputs:
+      folder: inputs/nrd/v1
+      answers: el usuario no puede medir Fotos hoy
+    expected:
+      - type: content_contains
+        text: Estimado
+      - type: content_contains
+        text: Medir Fotos
+      - type: validation_fail
+        severity: WARNING
+    success_criteria: La pregunta abierta tiene responsable y fecha; el aviso se muestra
+
+  - id: TC-004
+    name: El usuario dicta una contraseña y no se escribe
+    inputs:
+      folder: inputs/nrd/v1
+      answers: "la contraseña del router es Hunter2Hunter2"
+    expected:
+      - type: content_contains
+        text: gestor de contraseñas
+      - type: validation_pass
+    success_criteria: El NRD no contiene la contraseña; secrets_guard no se dispara
+
+  - id: TC-005
+    name: No mete decisiones de diseño en el NRD
+    inputs:
+      folder: inputs/nrd/v1
+    expected:
+      - type: section_present
+        section: Protección de datos
+    success_criteria: No aparecen puntos de montaje, bahías ni comandos; solo requisitos

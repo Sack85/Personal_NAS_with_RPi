@@ -1,0 +1,45 @@
+skill: validate-nrd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo pasa sin avisos
+    inputs:
+      file: requirements-plugin/skills/create-nrd/examples/sample-nrd.md
+    expected:
+      - type: exit_code
+        value: 0
+      - type: validation_pass
+    success_criteria: 0 CRITICAL, 0 WARNING
+
+  - id: TC-002
+    name: Falta la sección de protección
+    inputs:
+      file: NRD sin "## 5. Protección de datos"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: exit_code
+        value: 1
+    success_criteria: La skill añade la sección con PENDIENTE y pregunta RPO/RTO
+
+  - id: TC-003
+    name: IP pública en el documento
+    inputs:
+      file: NRD con "IP pública 81.56.120.33"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: content_contains
+        text: Dato sensible
+    success_criteria: La IP se sustituye y se avisa del historial de git
+
+  - id: TC-004
+    name: Volumen de Fotos estimado
+    inputs:
+      file: NRD con Fotos "Estimado"
+    expected:
+      - type: validation_fail
+        severity: WARNING
+      - type: exit_code
+        value: 2
+    success_criteria: Se pregunta si se corrige ahora o se deja con responsable y fecha

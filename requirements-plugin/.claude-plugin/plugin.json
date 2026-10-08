@@ -1,0 +1,9 @@
+{
+  "name": "requirements-plugin",
+  "version": "0.1.0",
+  "description": "Analista de requisitos: genera, actualiza, valida y aprueba el documento de requisitos del NAS (NRD)",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "requisitos", "nrd", "raspberry-pi", "openmediavault"]
+}

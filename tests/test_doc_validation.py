@@ -56,6 +56,16 @@ def test_required_sections():
     assert len(dv.check_required_sections(sections, ["Red"])) == 1
 
 
+def test_find_table_by_columns():
+    text = (
+        "| Carpeta | Volumen (GB) |\n|---|---|\n| Fotos | 300 |\n\n| A | B |\n|---|---|\n| 1 | 2 |"
+    )
+    rows = dv.find_table(text, "carpeta", "volumen")
+    assert rows == [{"carpeta": "Fotos", "volumen (gb)": "300"}]
+    assert dv.cell(rows[0], "volumen") == "300"
+    assert dv.find_table(text, "inexistente") is None
+
+
 def test_upstream_reference():
     assert dv.check_upstream_reference(DOC, "nrd") == []
     assert dv.check_upstream_reference(DOC, "hld")
