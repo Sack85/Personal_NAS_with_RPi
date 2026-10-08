@@ -27,7 +27,6 @@ plugins:
         upstream: [nrd]
   runbook-plugin:
     role: Autor de runbooks
-    wip: true
     deliverables:
       rbk:
         name: Runbook por fase

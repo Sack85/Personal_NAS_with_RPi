@@ -16,6 +16,11 @@
       "name": "architect-plugin",
       "source": "./architect-plugin",
       "description": "Arquitecto: diseño de alto nivel (HLD) y decisiones de arquitectura"
+    },
+    {
+      "name": "runbook-plugin",
+      "source": "./runbook-plugin",
+      "description": "Autor de runbooks: procedimientos por fase (RBK) con riesgo y vuelta atrás"
     }
   ]
 }
