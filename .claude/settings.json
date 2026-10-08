@@ -30,6 +30,7 @@
     ]
   },
   "enabledPlugins": {
-    "requirements-plugin@nas2rbpi-plugins": true
+    "requirements-plugin@nas2rbpi-plugins": true,
+    "architect-plugin@nas2rbpi-plugins": true
   }
 }

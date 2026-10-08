@@ -11,6 +11,11 @@
       "name": "requirements-plugin",
       "source": "./requirements-plugin",
       "description": "Analista de requisitos: documento de requisitos del NAS (NRD)"
+    },
+    {
+      "name": "architect-plugin",
+      "source": "./architect-plugin",
+      "description": "Arquitecto: diseño de alto nivel (HLD) y decisiones de arquitectura"
     }
   ]
 }
