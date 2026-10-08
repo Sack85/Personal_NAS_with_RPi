@@ -1,0 +1,32 @@
+{
+  "extraKnownMarketplaces": {
+    "nas2rbpi-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run python tools/validate.py:*)",
+      "Bash(make test)",
+      "Bash(make lint)",
+      "Bash(make validate:*)"
+    ]
+  },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_learnings_to_claude_md.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

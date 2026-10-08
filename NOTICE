@@ -1,0 +1,20 @@
+NAS2RBPi — sistema multiagéntico para un NAS con Raspberry Pi 5
+Copyright 2026 Sack85
+
+Este proyecto incluye trabajo derivado de:
+
+  Redefining Data Engineering with AI (RDEWAI)
+  https://github.com/RDEWAI/Redefining-DataEngineering-With-AI
+  Licencia Apache 2.0 (ver LICENSE)
+
+Ficheros derivados y modificados respecto al original:
+  - .claude/hooks/sync_learnings_to_claude_md.py
+  - .claude/skills/create-role-plugin/SKILL.md
+  - shared/ (validación de documentos, hooks de validación y cola de learnings,
+    guard de comandos derivado de enforce-readonly-queries.py)
+  - tests/test_skill_frontmatter.py, tests/test_skill_evals.py
+  - Estructura de plugins por rol: skills create/update/validate/approve/apply-learnings,
+    plantillas Jinja2, validadores, evals y versionado outputs/<entregable>/vN
+
+Las modificaciones adaptan el dominio (pipelines de datos) a la instalación y el
+mantenimiento de un NAS doméstico, y traducen el contenido al español.

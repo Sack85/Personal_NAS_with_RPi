@@ -1,0 +1,12 @@
+# Registro de roles y entregables. Fuente para tests, tools/sync_shared.py y tools/validate.py.
+# Cada plugin añadido aquí debe existir en .claude-plugin/marketplace.json.
+#
+# plugins:
+#   <nombre>-plugin:
+#     role: Nombre del rol
+#     deliverables:
+#       <abbr>:                 # carpeta outputs/<abbr>/ y memory/<abbr>/
+#         name: Nombre completo
+#         prefix: ABBR          # ficheros ABBR-AAAA-MM-DD-<corto>.md
+#         upstream: [abbr...]   # entregables que deben estar Aprobados antes
+plugins: {}

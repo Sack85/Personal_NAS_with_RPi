@@ -1,0 +1,10 @@
+{
+  "name": "nas2rbpi-plugins",
+  "owner": {
+    "name": "Sack85"
+  },
+  "metadata": {
+    "description": "Plugins por rol para montar y mantener un NAS con Raspberry Pi 5 (estructura derivada de RDEWAI)"
+  },
+  "plugins": []
+}
