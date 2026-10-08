@@ -1,0 +1,42 @@
+skill: create-upd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Kernel nuevo con NAS sano
+    inputs:
+      inventory: kernel 6.12.47 → 6.12.55 pendiente, sin alertas
+    expected:
+      - type: file_created
+        pattern: outputs/upd/v1/UPD-*.md
+      - type: content_contains
+        text: LnkSta
+      - type: validation_pass
+    success_criteria: Notas de versión citadas; comprobación de config.txt antes y de discos después
+
+  - id: TC-002
+    name: Disco degradándose bloquea el plan
+    inputs:
+      inventory: D1 con atributo 197 creciendo
+    expected:
+      - type: stops_with_message
+        text: /storage-plugin:diagnose-disk
+      - type: no_output_generated
+    success_criteria: No planifica actualizaciones con un disco fallando salvo justificación de seguridad
+
+  - id: TC-003
+    name: Inventario antiguo
+    inputs:
+      inventory: de hace 10 días
+    expected:
+      - type: asks_question
+        about: hacer un inventario nuevo
+    success_criteria: Invoca /maintainer-plugin:inventory antes de seguir
+
+  - id: TC-004
+    name: OMV mayor con plugin incompatible
+    inputs:
+      notes: el plugin compose no soporta aún la versión nueva
+    expected:
+      - type: content_contains
+        text: Posponer
+    success_criteria: Propone posponer OMV con la fuente y aplicar el resto

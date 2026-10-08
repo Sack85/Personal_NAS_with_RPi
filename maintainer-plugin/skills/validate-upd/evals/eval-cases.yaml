@@ -1,0 +1,29 @@
+skill: validate-upd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo pasa
+    inputs:
+      file: maintainer-plugin/skills/create-upd/examples/sample-upd.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: Kernel sin comprobar PCIe
+    inputs:
+      file: UPD con kernel y sin LnkSta en la verificación
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se añade la comprobación; no se quita el kernel para que pase
+
+  - id: TC-003
+    name: Sin precondición de backup
+    inputs:
+      file: UPD sin backup en Precondiciones
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Se añaden backup de AIO y restic

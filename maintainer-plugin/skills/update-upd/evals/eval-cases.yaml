@@ -1,0 +1,32 @@
+skill: update-upd
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Posponer OMV antes de ejecutar
+    inputs:
+      upd: UPD aprobado sin ejecutar
+      change: posponer openmediavault 8.1
+    expected:
+      - type: content_contains
+        text: "| OMV 8.1.0 | Posponer |"
+      - type: status_is
+        value: En revisión
+    success_criteria: Hay que volver a aprobarlo
+
+  - id: TC-002
+    name: UPD ya ejecutado
+    inputs:
+      upd: UPD con OPS Completado
+    expected:
+      - type: stops_with_message
+        text: /maintainer-plugin:create-upd
+    success_criteria: No edita un plan ya aplicado
+
+  - id: TC-003
+    name: Fallo en la ejecución
+    inputs:
+      ops: OPS Parcial "faltan discos tras el reinicio"
+    expected:
+      - type: file_created
+        pattern: outputs/upd/v2/UPD-*.md
+    success_criteria: La versión nueva cita el OPS y refuerza la vuelta atrás

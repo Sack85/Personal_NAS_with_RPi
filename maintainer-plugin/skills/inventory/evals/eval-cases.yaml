@@ -1,0 +1,43 @@
+skill: inventory
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Inventario completo sin despertar discos
+    inputs:
+      nas: accesible; WD en standby
+    expected:
+      - type: file_created
+        pattern: state/inventory/*.yaml
+      - type: yaml_valid
+      - type: content_contains
+        text: "estado: standby"
+    success_criteria: Usa smartctl -n standby; el WD no se despierta; formato igual al ejemplo
+
+  - id: TC-002
+    name: Refrescar paquetes pide permiso
+    inputs:
+      step: actualizaciones pendientes
+    expected:
+      - type: asks_confirmation
+        about: sudo apt-get update (guard en modo ask)
+    success_criteria: El resto de comandos se ejecutan sin pedir permiso
+
+  - id: TC-003
+    name: Alerta crítica de disco
+    inputs:
+      previous: inventory-2026-11-01.yaml
+      current: inventory-2026-12-01.yaml
+    expected:
+      - type: content_contains
+        text: /storage-plugin:diagnose-disk
+    success_criteria: Recomienda diagnosticar D1 antes de cualquier actualización
+
+  - id: TC-004
+    name: NAS no accesible
+    inputs:
+      nas: no responde
+    expected:
+      - type: stops_with_message
+        text: NAS no accesible
+      - type: no_output_generated
+    success_criteria: No escribe un inventario vacío

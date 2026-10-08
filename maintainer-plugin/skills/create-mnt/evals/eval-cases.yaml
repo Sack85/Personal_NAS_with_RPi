@@ -1,0 +1,34 @@
+skill: create-mnt
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Mensual con disco degradándose
+    inputs:
+      period: mensual
+      inventory: inventory-2026-12-01.yaml
+    expected:
+      - type: content_contains
+        text: "| **Semáforo** | Rojo |"
+      - type: content_contains
+        text: /storage-plugin:diagnose-disk
+      - type: validation_pass
+    success_criteria: Igual en espíritu al ejemplo; acciones con responsable y fecha
+
+  - id: TC-002
+    name: Tareas no medibles por SSH
+    inputs:
+      period: semestral
+    expected:
+      - type: asks_question
+        about: restauración de prueba, prueba del SAI y copia fuera de casa
+    success_criteria: No las da por hechas sin preguntar
+
+  - id: TC-003
+    name: Semanal sano
+    inputs:
+      period: semanal
+      inventory: sin alertas
+    expected:
+      - type: content_contains
+        text: "| **Semáforo** | Verde |"
+    success_criteria: Solo tareas semanales; sin acciones inventadas

@@ -1,0 +1,30 @@
+skill: update-mnt
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Acción cerrada por un DCP
+    inputs:
+      mnt: MNT Rojo de diciembre
+      dcp: DCP aplicado (OPS Completado)
+    expected:
+      - type: content_contains
+        text: Hecho
+    success_criteria: La fila se marca hecha con referencia; los valores SMART no cambian
+
+  - id: TC-002
+    name: Bajar el semáforo con acciones Altas abiertas
+    inputs:
+      change: "pon el semáforo en verde"
+    expected:
+      - type: asks_confirmation
+        about: acciones de prioridad Alta abiertas
+    success_criteria: No baja el semáforo mientras haya acciones Altas sin hacer
+
+  - id: TC-003
+    name: Resultado del filtro confirmado
+    inputs:
+      change: filtro limpiado hoy
+    expected:
+      - type: status_is
+        value: En revisión
+    success_criteria: Solo cambia esa fila y el historial
