@@ -1,0 +1,34 @@
+# Instalar: make dev-setup   ·   Ejecutar a mano: uv run pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        exclude: ^legacy/
+      - id: ruff-format
+        args: [--check]
+        exclude: ^legacy/
+
+  - repo: local
+    hooks:
+      - id: no-secrets
+        name: no-secrets (outputs, state, inputs, memory)
+        entry: uv run python shared/doc_validation.py --secrets-only
+        language: system
+        files: ^(outputs|state|inputs|memory)/.*\.(md|ya?ml|json|jsonl|txt|conf)$
+
+      - id: shared-in-sync
+        name: shared/ copiado a todos los plugins
+        entry: uv run python tools/sync_shared.py --check
+        language: system
+        pass_filenames: false
+        files: ^(shared/|.*-plugin/)
+
+      - id: pytest
+        name: pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: \.(py|md|ya?ml|json|j2)$
