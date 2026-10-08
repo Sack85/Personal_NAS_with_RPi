@@ -273,8 +273,8 @@ Si falla: hd-idle mal configurado solo impide el spindown; corrige el fichero y 
 | **Ejecuta** | Usuario |
 | **Dónde** | Físico |
 
-Apaga desde OMV, saca el Toshiba de la bahía 3, coloca el WD Red Plus (el que más calienta) en la
-bahía con más aire si hace falta, y arranca. Guarda el Toshiba sin borrar 30 días como copia
+Apaga desde OMV, saca el Toshiba de la bahía 3 y mueve el WD Red Plus de la bahía 2 a la 3 (la de
+más aire: ahora es el mecánico más grande); deja la 2 libre entre los dos WD. Arranca. Guarda el Toshiba sin borrar 30 días como copia
 extra.
 
 Esperado: cuatro dispositivos y pool montado.
