@@ -1,0 +1,1 @@
+{"skill": "update-nrd", "date": "2026-10-08", "correction": "Criticidad libre en Datos de Immich dio CRITICAL", "pattern": "Siempre usa Irreemplazable, Reemplazable o Mixta (con la parte entre paréntesis) en la columna Criticidad, y cifras numéricas en Crecimiento", "status": "pending"}
