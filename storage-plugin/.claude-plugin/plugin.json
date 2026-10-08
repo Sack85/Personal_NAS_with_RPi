@@ -1,0 +1,9 @@
+{
+  "name": "storage-plugin",
+  "version": "0.1.0",
+  "description": "Experto en discos del NAS: diagnóstico y planes de cambio de discos (DCP) para fallo de un disco de datos o de la paridad, sustitución preventiva, ampliación con un disco mayor y retirada",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "discos", "snapraid", "mergerfs", "smart", "recuperacion"]
+}

@@ -38,7 +38,7 @@ plugins:
       ops:
         name: Registro de ejecución
         prefix: OPS
-        upstream: [rbk, upd]
+        upstream: [rbk, upd, dcp]
   maintainer-plugin:
     role: Mantenedor
     deliverables:
@@ -49,4 +49,12 @@ plugins:
       mnt:
         name: Informe de mantenimiento
         prefix: MNT
+        upstream: [hld]
+  storage-plugin:
+    role: Experto en discos
+    wip: true
+    deliverables:
+      dcp:
+        name: Plan de cambio de discos
+        prefix: DCP
         upstream: [hld]
