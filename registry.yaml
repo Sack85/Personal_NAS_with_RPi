@@ -41,7 +41,6 @@ plugins:
         upstream: [rbk, upd]
   maintainer-plugin:
     role: Mantenedor
-    wip: true
     deliverables:
       upd:
         name: Plan de actualización

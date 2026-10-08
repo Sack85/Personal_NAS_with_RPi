@@ -14,7 +14,8 @@
       "Bash(uv run python tools/validate.py:*)",
       "Bash(make test)",
       "Bash(make lint)",
-      "Bash(make validate:*)"
+      "Bash(make validate:*)",
+      "Bash(uv run python tools/inventory_diff.py:*)"
     ]
   },
   "hooks": {
@@ -33,6 +34,7 @@
     "requirements-plugin@nas2rbpi-plugins": true,
     "architect-plugin@nas2rbpi-plugins": true,
     "runbook-plugin@nas2rbpi-plugins": true,
-    "operator-plugin@nas2rbpi-plugins": true
+    "operator-plugin@nas2rbpi-plugins": true,
+    "maintainer-plugin@nas2rbpi-plugins": true
   }
 }

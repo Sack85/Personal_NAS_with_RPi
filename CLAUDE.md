@@ -20,6 +20,7 @@ Idioma de los entregables y de las skills: español.
 | `architect-plugin` | HLD — diseño y ADR (`outputs/hld/`) | NRD |
 | `runbook-plugin` | RBK — un runbook por fase (`outputs/rbk/`) | HLD |
 | `operator-plugin` | OPS — registro de ejecución (`outputs/ops/`), `state/` | RBK, UPD o DCP |
+| `maintainer-plugin` | Inventario (`state/inventory/`), UPD y MNT (`outputs/upd/`, `outputs/mnt/`) | HLD |
 
 Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approve-<abbr>`,
 `apply-learnings`.
@@ -46,7 +47,8 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
   no se editan a mano; `make check-sync` lo verifica).
 - Nuevo plugin: skill `/create-role-plugin`.
 - Tests: `uv run pytest`; lint: `make lint`; validar entregables: `make validate D=<abbr>`.
-- Inventarios y copias de configuración del NAS: `state/inventory/`, `state/config/`.
+- Inventarios y copias de configuración del NAS: `state/inventory/`, `state/config/`;
+  lo aplicado en `state/applied.yaml`. Comparar inventarios: `uv run python tools/inventory_diff.py`.
 
 ## Aprendizajes
 
