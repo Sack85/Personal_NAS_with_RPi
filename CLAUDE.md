@@ -21,6 +21,7 @@ Idioma de los entregables y de las skills: español.
 | `runbook-plugin` | RBK — un runbook por fase (`outputs/rbk/`) | HLD |
 | `operator-plugin` | OPS — registro de ejecución (`outputs/ops/`), `state/` | RBK, UPD o DCP |
 | `maintainer-plugin` | Inventario (`state/inventory/`), UPD y MNT (`outputs/upd/`, `outputs/mnt/`) | HLD |
+| `storage-plugin` | Diagnóstico y DCP — cambio de discos (`outputs/dcp/`) | HLD |
 
 Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approve-<abbr>`,
 `apply-learnings`.

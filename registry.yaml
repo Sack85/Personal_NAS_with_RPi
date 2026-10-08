@@ -52,7 +52,6 @@ plugins:
         upstream: [hld]
   storage-plugin:
     role: Experto en discos
-    wip: true
     deliverables:
       dcp:
         name: Plan de cambio de discos
