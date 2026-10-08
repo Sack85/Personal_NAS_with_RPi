@@ -13,7 +13,6 @@
 plugins:
   requirements-plugin:
     role: Analista de requisitos
-    wip: true
     deliverables:
       nrd:
         name: Requisitos del NAS
