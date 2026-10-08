@@ -1,0 +1,39 @@
+{
+  "description": "Arquitecto: guard SSH, validación del HLD, secretos y cola de learnings",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/ssh_guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_output_hook.py hld skills/validate-hld/scripts/validate_hld.py",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/secrets_guard.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/check_learnings_queue.py architect-plugin hld",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

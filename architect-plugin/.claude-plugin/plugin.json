@@ -1,0 +1,9 @@
+{
+  "name": "architect-plugin",
+  "version": "0.1.0",
+  "description": "Arquitecto del NAS: genera, actualiza, valida y aprueba el diseño de alto nivel (HLD) con sus decisiones de arquitectura",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "arquitectura", "hld", "adr", "snapraid", "mergerfs", "openmediavault"]
+}
