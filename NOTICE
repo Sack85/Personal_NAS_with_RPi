@@ -12,7 +12,7 @@ Ficheros derivados y modificados respecto al original:
   - .claude/skills/create-role-plugin/SKILL.md
   - shared/ (validación de documentos, hooks de validación y cola de learnings,
     guard de comandos derivado de enforce-readonly-queries.py)
-  - tests/test_skill_frontmatter.py, tests/test_skill_evals.py
+  - tests/test_skills.py (de test_skill_frontmatter.py y test_skill_evals.py)
   - Estructura de plugins por rol: skills create/update/validate/approve/apply-learnings,
     plantillas Jinja2, validadores, evals y versionado outputs/<entregable>/vN
 
