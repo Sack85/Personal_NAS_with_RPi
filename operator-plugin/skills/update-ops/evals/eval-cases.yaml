@@ -1,0 +1,33 @@
+skill: update-ops
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Reanudar tras un corte de luz en el paso 5
+    inputs:
+      ops: OPS En curso con pasos 1-4 OK y 5 Pendiente
+    expected:
+      - type: asks_question
+        about: si el paso 5 llegó a ejecutarse
+      - type: content_contains
+        text: Reanudada en el paso 5
+    success_criteria: Comprueba el estado real (findmnt) antes de repetir nada
+
+  - id: TC-002
+    name: Añadir evidencia a un OPS cerrado
+    inputs:
+      ops: OPS Aprobado
+      change: añadir salida de smartctl del paso 2
+    expected:
+      - type: status_is
+        value: En revisión
+    success_criteria: No cambia resultados de pasos; añade la evidencia y una fila de historial
+
+  - id: TC-003
+    name: El documento ejecutado ya no es la última versión
+    inputs:
+      ops: OPS En curso de RBK v1
+      rbk: existe RBK v2 Aprobado
+    expected:
+      - type: asks_confirmation
+        about: continuar con la versión citada o empezar con la nueva
+    success_criteria: No mezcla pasos de dos versiones
