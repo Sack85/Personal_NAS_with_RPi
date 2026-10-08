@@ -1,0 +1,9 @@
+{
+  "name": "runbook-plugin",
+  "version": "0.1.0",
+  "description": "Autor de runbooks: convierte el HLD aprobado en procedimientos paso a paso por fase, con riesgo, quién ejecuta, comprobaciones y vuelta atrás",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "runbook", "procedimiento", "openmediavault", "raspberry-pi"]
+}
