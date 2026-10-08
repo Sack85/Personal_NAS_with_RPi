@@ -147,3 +147,32 @@ def test_secrets_guard_ignores_other_paths(tmp_path):
         SHARED / "hooks" / "secrets_guard.py", {"tool_input": {"file_path": str(target)}}
     )
     assert result.returncode == 0
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "sudo wipefs -a /dev/sdX",
+        "sudo mkfs.ext4 -L backup /dev/sdX1",
+        "sudo parted -s /dev/sdX mklabel gpt mkpart backup ext4 0% 100%",
+        "sudo tune2fs -m 0 /dev/sdX1",
+        "sudo snapraid -c <conf> -d d1 -l fix.log fix",
+        "sudo restic -r /mnt/backup/restic forget --keep-monthly 12 --prune",
+    ],
+)
+def test_destructive_commands(command):
+    assert dv.destructive_reason(command)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "sudo tune2fs -l /dev/sdX1 | grep 'Reserved block count'",
+        "lsblk -o NAME,SIZE,MODEL,SERIAL",
+        "sudo smartctl -t long /dev/sdX",
+        "sudo snapraid -c x.conf sync",
+        "sudo parted -l",
+    ],
+)
+def test_non_destructive_commands(command):
+    assert dv.destructive_reason(command) is None

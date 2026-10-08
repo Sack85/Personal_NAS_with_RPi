@@ -1,0 +1,34 @@
+skill: update-rbk
+version: "1.0"
+cases:
+  - id: TC-001
+    name: HLD v2 aprobado genera RBK v2 completo
+    inputs:
+      hld: HLD v2 Aprobado
+      rbk: outputs/rbk/v1/ (14 ficheros Aprobados)
+    expected:
+      - type: file_created
+        pattern: outputs/rbk/v2/RBK-*.md
+      - type: content_contains
+        text: HLD v2 (2.0, Aprobado)
+    success_criteria: v1 intacto; v2 En revisión con todos los RBK revisados
+
+  - id: TC-002
+    name: Incidencia del operador en la fase 03
+    inputs:
+      ops: OPS con "LnkSta 5GT/s en vez de 8GT/s"
+    expected:
+      - type: content_contains
+        text: "Si falla:"
+      - type: status_is
+        value: En revisión
+    success_criteria: El paso recoge la causa y cómo diagnosticarla; cita el OPS
+
+  - id: TC-003
+    name: Corrección sin incidencia ni HLD nuevo
+    inputs:
+      change: "cambia el paso 4"
+    expected:
+      - type: asks_question
+        about: qué falla del paso 4 y por qué
+    success_criteria: No edita hasta conocer el motivo concreto

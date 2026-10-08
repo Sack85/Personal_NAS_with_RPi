@@ -1,0 +1,40 @@
+skill: validate-rbk
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo de la fase 05 pasa
+    inputs:
+      file: runbook-plugin/skills/create-rbk/examples/sample-rbk.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: wipefs escondido en un paso de lectura
+    inputs:
+      file: RBK con "ssh nas 'lsblk && sudo wipefs -a /dev/sdb'" en un paso Lectura
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: El paso pasa a Destructivo, Usuario, con comprobación previa; no se baja el riesgo
+
+  - id: TC-003
+    name: Paso destructivo asignado al agente
+    inputs:
+      file: RBK con tune2fs -m 0 y "Ejecuta Agente"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: content_contains
+        text: "| **Ejecuta** | Usuario |"
+    success_criteria: Corregido a Usuario
+
+  - id: TC-004
+    name: Paso sin resultado esperado
+    inputs:
+      file: RBK con un paso sin "Esperado:"
+    expected:
+      - type: validation_fail
+        severity: WARNING
+    success_criteria: Se propone un esperado concreto

@@ -1,0 +1,48 @@
+skill: create-rbk
+version: "1.0"
+cases:
+  - id: TC-001
+    name: HLD en Borrador bloquea los runbooks
+    inputs:
+      phase: "05"
+      hld: HLD v1 Borrador
+    expected:
+      - type: stops_with_message
+        text: /architect-plugin:approve-hld
+      - type: no_output_generated
+    success_criteria: No escribe ningún RBK
+
+  - id: TC-002
+    name: Fase 05 con HLD aprobado
+    inputs:
+      phase: "05"
+      hld: HLD v1 Aprobado
+    expected:
+      - type: file_created
+        pattern: outputs/rbk/v1/RBK-*-05-*.md
+      - type: content_contains
+        text: "| **Ejecuta** | Usuario |"
+      - type: validation_pass
+    success_criteria: Borrado y formateo son Destructivo, del usuario, con comprobación de serie
+
+  - id: TC-003
+    name: Letra de disco fija en un paso destructivo
+    inputs:
+      phase: "11"
+      draft: "sudo wipefs -a /dev/sdc"
+    expected:
+      - type: content_contains
+        text: /dev/sdX
+      - type: content_contains
+        text: "Comprobación previa:"
+    success_criteria: Usa sdX e identifica el Hitachi por tamaño, modelo y serie
+
+  - id: TC-004
+    name: Comando no presente en la guía ni en el HLD
+    inputs:
+      phase: "09"
+      need: opción de hd-idle no documentada en la guía
+    expected:
+      - type: content_contains
+        text: Fuente
+    success_criteria: Verifica con --help o documentación oficial y cita la fuente; no inventa

@@ -25,3 +25,10 @@ plugins:
         name: Diseño de alto nivel
         prefix: HLD
         upstream: [nrd]
+  runbook-plugin:
+    role: Autor de runbooks
+    deliverables:
+      rbk:
+        name: Runbook por fase
+        prefix: RBK
+        upstream: [hld]

@@ -314,6 +314,50 @@ def check_placeholders(content: str) -> list[ValidationResult]:
     return results
 
 
+# --- Comandos destructivos (fuente única para ssh_guard.py y los validadores) ---
+
+DEVICE = r"/dev/(sd[a-z]|nvme\d|mmcblk\d|disk/)"
+
+DESTRUCTIVE: list[tuple[str, str]] = [
+    (r"^mkfs(\.\w+)?\b|^mke2fs\b|^mkswap\b", "formatear"),
+    (r"^wipefs\b", "borrar firmas de disco"),
+    (r"^(sgdisk|gdisk|cfdisk|sfdisk)\b", "particionar"),
+    (r"^parted\b(?!.*\s(-l|--list|print)\b)", "particionar"),
+    (r"^fdisk\b(?!\s+-l)", "particionar"),
+    (r"^dd\b.*\bof=", "escribir con dd"),
+    (r"^(shred|blkdiscard)\b", "borrado irrecuperable"),
+    (r"^tune2fs\b.*\s-[a-zA-Z]*m", "cambiar bloques reservados"),
+    (r"^snapraid\b.*\bfix\b", "snapraid fix"),
+    (r"^restic\b.*\b(forget|prune|key\s+remove)\b", "borrar snapshots de restic"),
+    (r"^rpi-eeprom-(config|update)\b.*(\s-e\b|--edit|--apply|\s-a\b|\s-d\b)", "EEPROM"),
+    (r"^mdadm\b.*--(create|zero-superblock|remove|fail)\b", "RAID"),
+    (r"^(lvremove|vgremove|pvremove)\b", "LVM"),
+    (r"^rm\b.*\s-[a-zA-Z]*[rR]", "borrado recursivo en el NAS"),
+]
+
+
+def strip_command_prefixes(command: str) -> str:
+    """Quita sudo, env, timeout... para que las reglas se apliquen al comando real."""
+    command = command.strip()
+    while True:
+        new = re.sub(r"^(sudo(\s+-\S+)*|env|nice|ionice|timeout\s+\S+|time)\s+", "", command)
+        new = re.sub(r"^\w+=\S*\s+", "", new)
+        if new == command:
+            return command
+        command = new
+
+
+def destructive_reason(command: str) -> str | None:
+    """Motivo si el comando (una línea) es destructivo para discos o backups."""
+    cmd = strip_command_prefixes(command)
+    for pattern, reason in DESTRUCTIVE:
+        if re.search(pattern, cmd):
+            return reason
+    if re.search(r">\s*" + DEVICE, cmd):
+        return "redirigir a un dispositivo de bloque"
+    return None
+
+
 # --- Secretos ----------------------------------------------------------------
 
 _PLACEHOLDER = re.compile(
