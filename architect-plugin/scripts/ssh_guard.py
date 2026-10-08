@@ -13,28 +13,17 @@ Los comandos locales que no tocan dispositivos de bloque no se evalúan.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
 import sys
 
-DEVICE = r"/dev/(sd[a-z]|nvme\d|mmcblk\d|disk/)"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path[:0] = [_HERE, os.path.dirname(_HERE)]  # copia en plugin / fuente en shared/
 
-DENY: list[tuple[str, str]] = [
-    (r"^mkfs(\.\w+)?\b|^mke2fs\b|^mkswap\b", "formatear"),
-    (r"^wipefs\b", "borrar firmas de disco"),
-    (r"^(sgdisk|gdisk|cfdisk|sfdisk)\b", "particionar"),
-    (r"^parted\b(?!.*\s(-l|--list|print)\b)", "particionar"),
-    (r"^fdisk\b(?!\s+-l)", "particionar"),
-    (r"^dd\b.*\bof=", "escribir con dd"),
-    (r"^(shred|blkdiscard)\b", "borrado irrecuperable"),
-    (r"^tune2fs\b.*\s-[a-zA-Z]*m", "cambiar bloques reservados"),
-    (r"^snapraid\b.*\bfix\b", "snapraid fix"),
-    (r"^restic\b.*\b(forget|prune|key\s+remove)\b", "borrar snapshots de restic"),
-    (r"^rpi-eeprom-(config|update)\b.*(\s-e\b|--edit|--apply|\s-a\b|\s-d\b)", "EEPROM"),
-    (r"^mdadm\b.*--(create|zero-superblock|remove|fail)\b", "RAID"),
-    (r"^(lvremove|vgremove|pvremove)\b", "LVM"),
-    (r"^rm\b.*\s-[a-zA-Z]*[rR]", "borrado recursivo en el NAS"),
-]
+from doc_validation import DESTRUCTIVE as DENY  # noqa: E402
+from doc_validation import DEVICE, strip_command_prefixes  # noqa: E402
+
 DENY_ANYWHERE = [(r">\s*" + DEVICE, "redirigir a un dispositivo de bloque")]
 
 ASK: list[tuple[str, str]] = [
@@ -117,18 +106,8 @@ def _split_unquoted(command: str) -> list[str]:
     return parts
 
 
-def _strip_prefixes(seg: str) -> str:
-    seg = seg.strip()
-    while True:
-        new = re.sub(r"^(sudo(\s+-\S+)*|env|nice|ionice|timeout\s+\S+|time)\s+", "", seg)
-        new = re.sub(r"^\w+=\S*\s+", "", new)
-        if new == seg:
-            return seg
-        seg = new
-
-
 def _segments(command: str) -> list[str]:
-    return [s for s in (_strip_prefixes(x) for x in _split_unquoted(command)) if s]
+    return [s for s in (strip_command_prefixes(x) for x in _split_unquoted(command)) if s]
 
 
 def _remote_command(segment: str) -> str | None:
