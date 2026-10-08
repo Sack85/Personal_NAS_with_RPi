@@ -1,0 +1,9 @@
+{
+  "name": "maintainer-plugin",
+  "version": "0.1.0",
+  "description": "Mantenedor del NAS: inventario de versiones y salud, planes de actualización (UPD) con análisis de impacto y vuelta atrás, e informes de mantenimiento periódico (MNT)",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "actualizaciones", "mantenimiento", "inventario", "smart", "openmediavault"]
+}

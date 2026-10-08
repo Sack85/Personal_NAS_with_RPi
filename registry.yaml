@@ -38,4 +38,16 @@ plugins:
       ops:
         name: Registro de ejecución
         prefix: OPS
-        upstream: [rbk]
+        upstream: [rbk, upd]
+  maintainer-plugin:
+    role: Mantenedor
+    wip: true
+    deliverables:
+      upd:
+        name: Plan de actualización
+        prefix: UPD
+        upstream: [hld]
+      mnt:
+        name: Informe de mantenimiento
+        prefix: MNT
+        upstream: [hld]
