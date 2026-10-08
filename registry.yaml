@@ -34,7 +34,6 @@ plugins:
         upstream: [hld]
   operator-plugin:
     role: Operador
-    wip: true
     deliverables:
       ops:
         name: Registro de ejecución

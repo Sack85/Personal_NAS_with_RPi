@@ -21,6 +21,11 @@
       "name": "runbook-plugin",
       "source": "./runbook-plugin",
       "description": "Autor de runbooks: procedimientos por fase (RBK) con riesgo y vuelta atrás"
+    },
+    {
+      "name": "operator-plugin",
+      "source": "./operator-plugin",
+      "description": "Operador: ejecuta RBK/UPD/DCP aprobados y registra cada paso (OPS)"
     }
   ]
 }
