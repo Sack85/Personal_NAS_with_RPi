@@ -1,0 +1,99 @@
+{#- Plantilla del Plan de cambio de discos (DCP).
+    Secciones obligatorias: validate_dcp.py (REQUIRED_SECTIONS).
+    Escenario: Fallo de disco de datos, Fallo de paridad, Sustitución preventiva, Ampliación o
+    Retirada. "Situación final" la valida check_disk_layout (paridad ≥ mayor dato, paridad fuera
+    del pool, content ≥ paridades + 1): no cambies sus cabeceras.
+    Los pasos siguen las reglas de los runbooks. -#}
+# DCP — {{ titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | DCP |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Storage Agent |
+| **Entregable previo** | HLD {{ hld_version_dir }} ({{ hld_version }}, Aprobado) — {{ hld_fichero }} |
+| **Escenario** | {{ escenario }} |
+| **Disco afectado** | {{ disco_afectado }} |
+| **Disco nuevo** | {{ disco_nuevo }} |
+| **Inventario** | {{ inventario }} |
+| **Riesgo máximo** | {{ riesgo_maximo }} |
+
+## Resumen
+
+{{ resumen }}
+
+## Diagnóstico
+
+{{ diagnostico }}
+
+## Situación de partida
+
+| Rol | Disco | Tamaño | Estado |
+|---|---|---|---|
+{% for d in partida -%}
+| {{ d.rol }} | {{ d.disco }} | {{ d.tamano }} | {{ d.estado }} |
+{% endfor %}
+## Situación final
+
+| Rol | Disco | Tamaño | Sistema de ficheros | En pool | Content |
+|---|---|---|---|---|---|
+{% for d in final -%}
+| {{ d.rol }} | {{ d.disco }} | {{ d.tamano }} | {{ d.fs }} | {{ d.en_pool }} | {{ d.content }} |
+{% endfor %}
+## Precondiciones
+
+{% for p in precondiciones -%}
+- [ ] {{ p }}
+{% endfor %}
+## Pasos
+{% for paso in pasos %}
+### Paso {{ loop.index }}: {{ paso.titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | {{ paso.riesgo }} |
+| **Ejecuta** | {{ paso.ejecuta }} |
+| **Dónde** | {{ paso.donde }} |
+
+{% if paso.previa %}Comprobación previa:
+
+```bash
+{{ paso.previa }}
+```
+
+{% endif %}{% if paso.comando %}Comando:
+
+```bash
+{{ paso.comando }}
+```
+
+{% endif %}{% if paso.instrucciones %}{{ paso.instrucciones }}
+
+{% endif %}Esperado: {{ paso.esperado }}
+
+Si falla: {{ paso.si_falla }}
+{% endfor %}
+## Verificación final
+
+| Comprobación | Comando | Esperado |
+|---|---|---|
+{% for v in verificacion -%}
+| {{ v.comprobacion }} | `{{ v.comando }}` | {{ v.esperado }} |
+{% endfor %}
+## Vuelta atrás
+
+{{ vuelta_atras }}
+
+## Cambios en el diseño
+
+{% for c in cambios -%}
+- {{ c }}
+{% endfor %}
+## Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Storage Agent | Creación |

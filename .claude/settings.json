@@ -35,6 +35,7 @@
     "architect-plugin@nas2rbpi-plugins": true,
     "runbook-plugin@nas2rbpi-plugins": true,
     "operator-plugin@nas2rbpi-plugins": true,
-    "maintainer-plugin@nas2rbpi-plugins": true
+    "maintainer-plugin@nas2rbpi-plugins": true,
+    "storage-plugin@nas2rbpi-plugins": true
   }
 }

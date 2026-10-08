@@ -19,10 +19,12 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from doc_validation import (  # noqa: E402
+    YES,
     ValidationReport,
     ValidationResult,
     base_report,
     cell,
+    check_disk_layout,
     check_no_empty_sections,
     check_required_sections,
     check_upstream_reference,
@@ -53,97 +55,12 @@ REQUIRED_SECTIONS = [
 CONTENT_SECTIONS = REQUIRED_SECTIONS[:-1]
 
 NEVER_EXPOSED = {"22": "SSH", "8000": "panel de OMV", "8080": "panel de AIO"}
-YES = re.compile(r"^\s*(s[ií]|yes)\b", re.IGNORECASE)
-SIZE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(TB|GB|T|G)\b", re.IGNORECASE)
-
-
-def size_gb(text: str) -> float | None:
-    m = SIZE.search(text)
-    if not m:
-        return None
-    value = float(m.group(1).replace(",", "."))
-    return value * 1000 if m.group(2).upper().startswith("T") else value
-
-
-def is_data_role(role: str) -> bool:
-    return bool(re.match(r"^\s*(d\d+|datos?)\b", role, re.IGNORECASE))
-
-
-def is_parity_role(role: str) -> bool:
-    return role.strip().lower().startswith("paridad")
 
 
 def check_storage(sections: dict[str, str]) -> list[ValidationResult]:
     section = "Almacenamiento"
     body = find_section(sections, section) or ""
-    rows = find_table(body, "rol", "disco", "tamaño", "en pool", "content")
-    if not rows:
-        return [
-            critical(
-                section,
-                "No hay tabla de discos con Rol, Disco, Tamaño, En pool y Content",
-                "Usa la tabla de la plantilla HLD_template.j2",
-            )
-        ]
-    results: list[ValidationResult] = []
-    parity = [r for r in rows if is_parity_role(cell(r, "rol"))]
-    data = [r for r in rows if is_data_role(cell(r, "rol"))]
-    if not parity:
-        results.append(critical(section, "No hay disco de paridad", "Asigna el rol Paridad"))
-    if not data:
-        results.append(critical(section, "No hay discos de datos", "Asigna roles D1, D2…"))
-
-    sizes = {}
-    for r in parity + data:
-        gb = size_gb(cell(r, "tamaño"))
-        if gb is None:
-            results.append(
-                critical(
-                    section,
-                    f"Tamaño ilegible para {cell(r, 'rol')}: '{cell(r, 'tamaño')}'",
-                    "Escribe el tamaño como '1 TB' o '500 GB'",
-                )
-            )
-        sizes[id(r)] = gb
-    largest = max((sizes[id(r)] or 0 for r in data), default=0)
-    for r in parity:
-        gb = sizes[id(r)]
-        if gb is not None and gb < largest:
-            results.append(
-                critical(
-                    section,
-                    f"La paridad ({cell(r, 'tamaño')}) es menor que el mayor disco de datos",
-                    "La paridad debe ser ≥ que cada disco de datos: cambia de paridad o de disco",
-                )
-            )
-        if YES.match(cell(r, "en pool")):
-            results.append(
-                critical(
-                    section,
-                    "La paridad está dentro del pool de MergerFS",
-                    "El pool solo une discos de datos; la paridad la gestiona SnapRAID",
-                )
-            )
-    for r in data:
-        if not YES.match(cell(r, "en pool")):
-            results.append(
-                warning(section, f"{cell(r, 'rol')} no está en el pool", "Confírmalo en un ADR")
-            )
-        fs = cell(r, "sistema de ficheros").lower()
-        if fs and not fs.startswith(("ext4", "xfs")):
-            results.append(
-                warning(section, f"{cell(r, 'rol')} usa '{fs}'", "SnapRAID con ext4 o xfs")
-            )
-
-    contents = sum(1 for r in rows if YES.match(cell(r, "content")))
-    if parity and contents < len(parity) + 1:
-        results.append(
-            critical(
-                section,
-                f"{contents} fichero(s) content para {len(parity)} paridad(es)",
-                "SnapRAID necesita al menos paridades + 1 content, en discos distintos",
-            )
-        )
+    results = check_disk_layout(body, section)
     if not re.search(r"umbral", body, re.IGNORECASE):
         results.append(
             warning(

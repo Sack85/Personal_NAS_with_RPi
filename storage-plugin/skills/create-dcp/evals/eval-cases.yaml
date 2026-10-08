@@ -1,0 +1,45 @@
+skill: create-dcp
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Fallo de D2 con disco de 1 TB
+    inputs:
+      scenario: Fallo de disco de datos
+      new_disk: Samsung 870 EVO 1 TB
+    expected:
+      - type: file_created
+        pattern: outputs/dcp/v1/DCP-*.md
+      - type: content_contains
+        text: -d d2 -l fix.log fix
+      - type: validation_pass
+    success_criteria: Sync programado desactivado como paso 1; fix del usuario; ningún sync antes
+
+  - id: TC-002
+    name: Disco nuevo mayor que la paridad
+    inputs:
+      scenario: Sustitución preventiva
+      new_disk: WD Red Plus 2 TB
+    expected:
+      - type: content_contains
+        text: "| Paridad | WD Red Plus | 2 TB |"
+      - type: validation_pass
+    success_criteria: El nuevo pasa a paridad y la antigua a datos
+
+  - id: TC-003
+    name: Sin diagnóstico previo
+    inputs:
+      scenario: Fallo de paridad
+    expected:
+      - type: stops_with_message
+        text: /storage-plugin:diagnose-disk
+    success_criteria: No escribe un DCP sin diagnóstico
+
+  - id: TC-004
+    name: El usuario quiere hacer sync primero "para asegurar"
+    inputs:
+      scenario: Fallo de disco de datos
+      answers: "haz un sync antes por si acaso"
+    expected:
+      - type: stops_with_message
+        text: perderías los datos del disco muerto
+    success_criteria: Explica por qué no y no lo incluye

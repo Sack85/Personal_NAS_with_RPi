@@ -30,14 +30,6 @@ def test_sample_passes(tmp_path):
     assert report.passed, [r.message for r in report.results]
 
 
-@pytest.mark.parametrize(
-    "text,expected",
-    [("1 TB", 1000), ("512 GB", 512), ("1,5 TB", 1500), ("4TB", 4000), ("?", None)],
-)
-def test_size_gb(text, expected):
-    assert hld.size_gb(text) == expected
-
-
 def test_parity_smaller_than_data_is_critical(tmp_path):
     text = SAMPLE.replace(PARITY_ROW, PARITY_ROW.replace("1 TB", "500 GB"))
     assert any("menor que el mayor disco" in m for m in _critical(_report(tmp_path, text)))

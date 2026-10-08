@@ -186,3 +186,11 @@ def test_commands_in_unwraps_ssh_loops_and_chains():
     cmds = dv.commands_in(text)
     assert 'sudo smartctl -t long "$d"' in cmds
     assert "sudo wipefs -a /dev/sdb" in cmds
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [("1 TB", 1000), ("512 GB", 512), ("1,5 TB", 1500), ("4TB", 4000), ("?", None)],
+)
+def test_size_gb(text, expected):
+    assert dv.size_gb(text) == expected
