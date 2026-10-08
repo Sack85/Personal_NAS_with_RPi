@@ -1,0 +1,31 @@
+skill: validate-ops
+version: "1.0"
+cases:
+  - id: TC-001
+    name: El ejemplo pasa
+    inputs:
+      file: operator-plugin/skills/create-ops/examples/sample-ops.md
+    expected:
+      - type: exit_code
+        value: 0
+    success_criteria: 0 CRITICAL y 0 WARNING
+
+  - id: TC-002
+    name: Completado con un paso en Fallo
+    inputs:
+      file: OPS Completado con "| Fallo |"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+    success_criteria: Propone Parcial e incidencia
+
+  - id: TC-003
+    name: Paso destructivo atribuido al agente
+    inputs:
+      file: OPS con "| Destructivo | Agente |"
+    expected:
+      - type: validation_fail
+        severity: CRITICAL
+      - type: asks_question
+        about: quién lo ejecutó realmente
+    success_criteria: No se corrige cambiando el nombre sin preguntar

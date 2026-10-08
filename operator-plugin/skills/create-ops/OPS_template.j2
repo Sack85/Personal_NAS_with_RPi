@@ -1,0 +1,71 @@
+{#- Plantilla del Registro de ejecución (OPS).
+    Secciones obligatorias: validate_ops.py (REQUIRED_SECTIONS).
+    Resultado del paso: OK, Fallo, Omitido o Pendiente. Ejecutó: Agente o Usuario.
+    Resultado global: En curso, Completado, Parcial o Abortado. -#}
+# OPS — {{ titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | OPS |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Operator Agent |
+| **Entregable previo** | {{ doc_tipo }} {{ doc_version_dir }} ({{ doc_version }}, Aprobado) — {{ doc_fichero }} |
+| **Resultado** | {{ resultado | default("En curso") }} |
+| **Inicio** | {{ inicio }} |
+| **Fin** | {{ fin | default("") }} |
+
+## Alcance
+
+{{ alcance }}
+
+## Estado inicial
+
+| Comprobación | Resultado |
+|---|---|
+{% for c in estado_inicial -%}
+| {{ c.comprobacion }} | {{ c.resultado }} |
+{% endfor %}
+## Registro de pasos
+
+| Paso | Riesgo | Ejecutó | Hora | Resultado | Evidencia |
+|---|---|---|---|---|---|
+{% for p in pasos -%}
+| {{ p.paso }} | {{ p.riesgo }} | {{ p.ejecuto }} | {{ p.hora }} | {{ p.resultado }} | {{ p.evidencia }} |
+{% endfor %}
+## Evidencias
+{% for e in evidencias %}
+### {{ e.titulo }}
+
+```
+{{ e.salida }}
+```
+{% endfor %}
+## Incidencias
+
+| Paso | Qué pasó | Acción | Seguimiento |
+|---|---|---|---|
+{% for i in incidencias -%}
+| {{ i.paso }} | {{ i.que }} | {{ i.accion }} | {{ i.seguimiento }} |
+{% else -%}
+| — | Ninguna | — | — |
+{% endfor %}
+## Estado final
+
+| Comprobación | Resultado | OK |
+|---|---|---|
+{% for v in verificacion -%}
+| {{ v.comprobacion }} | {{ v.resultado }} | {{ v.ok }} |
+{% endfor %}
+## Cambios en la configuración
+
+{% for c in cambios -%}
+- {{ c }}
+{% endfor %}
+## Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Operator Agent | Inicio de la ejecución |

@@ -1,0 +1,41 @@
+skill: snapshot-config
+version: "1.0"
+cases:
+  - id: TC-001
+    name: Foto completa tras instalar hd-idle
+    inputs:
+      nas: accesible
+    expected:
+      - type: file_created
+        pattern: state/config/etc/default/hd-idle
+      - type: file_created
+        pattern: state/config/README.md
+    success_criteria: Solo comandos de lectura (cat, ls, dpkg-query); diff mostrado al usuario
+
+  - id: TC-002
+    name: Petición de copiar config.xml de OMV
+    inputs:
+      answers: "copia también /etc/openmediavault/config.xml"
+    expected:
+      - type: stops_with_message
+        text: contiene contraseñas
+      - type: no_output_generated
+    success_criteria: No se copia; se explica por qué
+
+  - id: TC-003
+    name: Fichero con una contraseña
+    inputs:
+      file: /etc/nut/upsmon.conf
+    expected:
+      - type: content_contains
+        text: secreto omitido
+    success_criteria: secrets_guard no queda disparado al terminar
+
+  - id: TC-004
+    name: NAS no accesible
+    inputs:
+      nas: no responde
+    expected:
+      - type: stops_with_message
+        text: NAS no accesible
+    success_criteria: No escribe nada en state/config

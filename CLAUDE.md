@@ -19,6 +19,7 @@ Idioma de los entregables y de las skills: español.
 | `requirements-plugin` | NRD — requisitos del NAS (`outputs/nrd/`) | `inputs/nrd/vN/` |
 | `architect-plugin` | HLD — diseño y ADR (`outputs/hld/`) | NRD |
 | `runbook-plugin` | RBK — un runbook por fase (`outputs/rbk/`) | HLD |
+| `operator-plugin` | OPS — registro de ejecución (`outputs/ops/`), `state/` | RBK, UPD o DCP |
 
 Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approve-<abbr>`,
 `apply-learnings`.

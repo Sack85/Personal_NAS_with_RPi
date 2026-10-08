@@ -1,0 +1,9 @@
+{
+  "name": "operator-plugin",
+  "version": "0.1.0",
+  "description": "Operador del NAS: ejecuta runbooks, planes de actualización y planes de discos aprobados por SSH, entrega al usuario los pasos destructivos y registra cada paso con evidencias (OPS)",
+  "author": {
+    "name": "Sack85"
+  },
+  "keywords": ["nas", "operador", "ejecucion", "ssh", "evidencias"]
+}

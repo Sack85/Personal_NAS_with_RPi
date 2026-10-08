@@ -32,3 +32,10 @@ plugins:
         name: Runbook por fase
         prefix: RBK
         upstream: [hld]
+  operator-plugin:
+    role: Operador
+    deliverables:
+      ops:
+        name: Registro de ejecución
+        prefix: OPS
+        upstream: [rbk]
