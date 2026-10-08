@@ -4,9 +4,18 @@
 # plugins:
 #   <nombre>-plugin:
 #     role: Nombre del rol
+#     wip: true                 # en construcción: los tests de estructura lo ignoran
 #     deliverables:
 #       <abbr>:                 # carpeta outputs/<abbr>/ y memory/<abbr>/
 #         name: Nombre completo
 #         prefix: ABBR          # ficheros ABBR-AAAA-MM-DD-<corto>.md
 #         upstream: [abbr...]   # entregables que deben estar Aprobados antes
-plugins: {}
+plugins:
+  requirements-plugin:
+    role: Analista de requisitos
+    wip: true
+    deliverables:
+      nrd:
+        name: Requisitos del NAS
+        prefix: NRD
+        upstream: []

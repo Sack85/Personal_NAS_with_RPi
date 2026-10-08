@@ -7,10 +7,11 @@ import json
 import pytest
 from conftest import ROOT, load_module
 from jinja2 import Environment
-from registry import deliverables, load_registry
+from registry import deliverables, ready_plugins
 
-PLUGINS = list(load_registry())
-DELIVERABLES = deliverables()
+PLUGINS = list(ready_plugins())
+DELIVERABLES = deliverables(ready_only=True)
+ALL_DELIVERABLES = deliverables()
 CORE_SKILLS = ("create", "update", "validate", "approve")
 
 
@@ -71,7 +72,7 @@ def test_deliverable_layout(abbr):
     assert (ROOT / "memory" / abbr / "learnings-queue.jsonl").exists()
     assert (ROOT / "outputs" / abbr / "v1").is_dir()
     for up in d.get("upstream", []):
-        assert up in DELIVERABLES, f"{abbr}: entregable previo desconocido {up}"
+        assert up in ALL_DELIVERABLES, f"{abbr}: entregable previo desconocido {up}"
 
 
 def _validator(abbr: str):

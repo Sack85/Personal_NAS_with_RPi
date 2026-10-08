@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 import yaml
 from conftest import ROOT
-from registry import load_registry
+from registry import load_registry, ready_plugins
 
 SKILLS = [
     (plugin, path.parent.name, path)
-    for plugin in load_registry()
+    for plugin in ready_plugins()
     for path in sorted((ROOT / plugin / "skills").glob("*/SKILL.md"))
 ]
 IDS = [f"{p}/{s}" for p, s, _ in SKILLS]

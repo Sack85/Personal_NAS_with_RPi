@@ -15,10 +15,16 @@ def load_registry() -> dict:
     return data.get("plugins") or {}
 
 
-def deliverables() -> dict[str, dict]:
-    """{abbr: {..., 'plugin': nombre}} para todos los plugins."""
+def ready_plugins() -> dict:
+    """Plugins terminados (sin `wip: true`): los únicos que se exigen en tests y marketplace."""
+    return {name: spec for name, spec in load_registry().items() if not spec.get("wip")}
+
+
+def deliverables(ready_only: bool = False) -> dict[str, dict]:
+    """{abbr: {..., 'plugin': nombre}}."""
     out: dict[str, dict] = {}
-    for plugin, spec in load_registry().items():
+    plugins = ready_plugins() if ready_only else load_registry()
+    for plugin, spec in plugins.items():
         for abbr, d in (spec.get("deliverables") or {}).items():
             out[abbr] = {**d, "plugin": plugin}
     return out
