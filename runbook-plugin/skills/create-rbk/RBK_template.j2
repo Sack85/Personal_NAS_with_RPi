@@ -1,0 +1,79 @@
+{#- Plantilla de Runbook (RBK): un fichero por fase.
+    Secciones obligatorias: validate_rbk.py (REQUIRED_SECTIONS).
+    Cada paso es "### Paso N: título" con su tabla Riesgo / Ejecuta / Dónde y los apartados
+    Comprobación previa, Comando, Esperado y Si falla. Riesgo: Lectura, Cambio o Destructivo.
+    Ejecuta: Agente o Usuario (Destructivo = siempre Usuario). -#}
+# RBK {{ fase_num }} — {{ fase_nombre }}
+
+| Campo | Valor |
+|---|---|
+| **Documento** | RBK |
+| **Fase** | {{ fase_num }} — {{ fase_nombre }} |
+| **Versión** | {{ version | default("1.0") }} |
+| **Estado** | {{ estado | default("Borrador") }} |
+| **Fecha de creación** | {{ fecha }} |
+| **Última modificación** | {{ fecha }} |
+| **Autor** | Runbook Agent |
+| **Entregable previo** | HLD {{ hld_version_dir }} ({{ hld_version }}, Aprobado) — {{ hld_fichero }} |
+| **Riesgo máximo** | {{ riesgo_maximo }} |
+| **Duración estimada** | {{ duracion }} |
+
+## Objetivo
+
+{{ objetivo }}
+
+## Prerrequisitos
+
+{% for p in prerrequisitos -%}
+- [ ] {{ p }}
+{% endfor %}
+## Pasos
+{% for paso in pasos %}
+### Paso {{ loop.index }}: {{ paso.titulo }}
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | {{ paso.riesgo }} |
+| **Ejecuta** | {{ paso.ejecuta }} |
+| **Dónde** | {{ paso.donde }} |
+| **HLD** | {{ paso.hld }} |
+
+{% if paso.previa %}Comprobación previa:
+
+```bash
+{{ paso.previa }}
+```
+
+{% endif %}{% if paso.comando %}Comando:
+
+```bash
+{{ paso.comando }}
+```
+
+{% endif %}{% if paso.instrucciones %}{{ paso.instrucciones }}
+
+{% endif %}Esperado: {{ paso.esperado }}
+
+Si falla: {{ paso.si_falla }}
+{% endfor %}
+## Verificación final
+
+| Comprobación | Comando | Esperado |
+|---|---|---|
+{% for v in verificacion -%}
+| {{ v.comprobacion }} | `{{ v.comando }}` | {{ v.esperado }} |
+{% endfor %}
+## Vuelta atrás
+
+{{ vuelta_atras }}
+
+## Evidencias
+
+{% for e in evidencias -%}
+- {{ e }}
+{% endfor %}
+## Historial de versiones
+
+| Versión | Fecha | Autor | Cambio |
+|---|---|---|---|
+| {{ version | default("1.0") }} | {{ fecha }} | Runbook Agent | Creación |
