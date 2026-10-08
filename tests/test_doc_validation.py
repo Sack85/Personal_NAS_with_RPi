@@ -176,3 +176,13 @@ def test_destructive_commands(command):
 )
 def test_non_destructive_commands(command):
     assert dv.destructive_reason(command) is None
+
+
+def test_commands_in_unwraps_ssh_loops_and_chains():
+    text = (
+        "```bash\nssh nas 'for d in /dev/sda; do sudo smartctl -t long \"$d\"; done'\n"
+        "ssh nas 'lsblk && sudo wipefs -a /dev/sdb'\n```"
+    )
+    cmds = dv.commands_in(text)
+    assert 'sudo smartctl -t long "$d"' in cmds
+    assert "sudo wipefs -a /dev/sdb" in cmds
