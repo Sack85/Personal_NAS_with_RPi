@@ -64,6 +64,7 @@ lo previsto en el NRD.
 |---|---|---|---|---|
 | Diagnosticar D1 y preparar su sustitución | Alta | Adulto 1 | 2026-12-05 | `/storage-plugin:diagnose-disk` |
 | Backup restic al Hitachi antes de tocar discos | Alta | Adulto 1 | 2026-12-03 | `/operator-plugin:create-ops` (RBK 11) |
+| Revisar el aire de la bahía de D1 (41 °C) y limpiar el filtro | Media | Adulto 1 | 2026-12-03 | — |
 | APM 254 en D1 si sigue en servicio | Media | Adulto 1 | 2026-12-05 | `/storage-plugin:create-dcp` |
 | Plan de actualización de kernel y OMV 8.1 tras el cambio de disco | Media | Adulto 1 | 2027-01-10 | `/maintainer-plugin:create-upd` |
 
