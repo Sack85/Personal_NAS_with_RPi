@@ -4,24 +4,24 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 01 — Material y montaje |
-| **Versión** | 2.0 |
+| **Versión** | 2.1 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
 | **Última modificación** | 2026-10-09 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 3 h (sin contar compras ni impresión) |
 
 ## Objetivo
 
 Reunir el material del HLD §2, montar el HAT, la caja y el aire, y dejar cada disco identificado
-por su número de serie y su bahía (1 = WD Blue paridad, 2 = vacía, 3 = Toshiba MK1059 D1,
-4 = Samsung QVO D2). Los discos quedan en sus bahías pero sin conectar al FFC hasta el RBK 03.
+por su número de serie y su bahía (1 = Toshiba MK1059 D1, 2 = vacía, 3 = WD Blue paridad,
+4 = Samsung QVO D2; HLD v2 2.1 §2, ADR-023). Los discos quedan en sus bahías pero sin conectar al FFC hasta el RBK 03.
 
 ## Prerrequisitos
 
-- [ ] HLD v2 2.0 aprobado
+- [ ] HLD v2 2.1 aprobado
 - [ ] Los datos de los discos viejos (WD Blue, Toshiba MK1059, Samsung QVO) copiados a los PC: el RBK 05 los borra
 - [ ] Disco USB externo de 4 TB y caja USB con paso de SMART (`smartctl -d sat`) comprados (HLD §2, ADR-017)
 - [ ] Caja impresa en PETG o ASA (nunca PLA)
@@ -80,11 +80,11 @@ Si falla: si un pestillo no cierra, no fuerces: saca el FFC y vuelve a insertarl
 | **Riesgo** | Cambio |
 | **Ejecuta** | Usuario |
 | **Dónde** | Físico |
-| **HLD** | §2 (bahías) |
+| **HLD** | v2 2.1 §2 (bahías), ADR-023 |
 
-Esperado: bahía 1 = WD Blue, bahía 2 = vacía, bahía 3 = Toshiba MK1059 (la de más aire), bahía 4 = Samsung QVO (la de menos aire). Los dos mecánicos separados por la bahía vacía. Discos sin conectar al HAT hasta el RBK 03 paso 12.
+Esperado: bahía 1 = Toshiba MK1059 (D1, recibe aire del ventilador superior), bahía 2 = vacía, bahía 3 = WD Blue (paridad), bahía 4 = Samsung QVO (D2). Comprobado por puerto ATA el 2026-10-09 (HLD v2 2.1, ADR-023); no se mueven discos. Los dos mecánicos separados por la bahía vacía. Discos sin conectar al HAT hasta el RBK 03 paso 12.
 
-Si falla: si la caja impresa no deja la bahía 3 en la entrada de aire, cambia de bahía a Toshiba y QVO y anótalo en el OPS para actualizar el HLD.
+Si falla: si el Toshiba supera 40 °C de forma sostenida (RBK 13), intercambia de bahía el Toshiba y el WD Blue (los roles no cambian: montaje por UUID, ADR-022/023) y anótalo en el OPS. Cualquier otro reparto: para y vuelve al arquitecto.
 
 ### Paso 5: Montar el ventilador y el filtro
 
@@ -117,7 +117,7 @@ Si falla: si no hay sitio que cumpla, para y consulta al arquitecto: el riesgo d
 | Comprobación | Comando | Esperado |
 |---|---|---|
 | Piezas | `inspección visual` | todas las del HLD §2 |
-| Bahías | `inspección visual` | 1 WD, 2 vacía, 3 Toshiba, 4 QVO |
+| Bahías | `inspección visual` | 1 Toshiba, 2 vacía, 3 WD Blue, 4 QVO (HLD v2 2.1 §2) |
 | Números de serie | `tabla del OPS` | 4 discos con rol y serie |
 
 ## Vuelta atrás
@@ -143,3 +143,5 @@ Nada es irreversible: desmontar en orden inverso. Ningún disco se ha escrito.
 | 1.0 | 2026-10-09 | Runbook Agent | Estado cambiado a Aprobado |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado); cita la nueva versión. Comprobado que identifica los discos por by-id o UUID, nunca por `/dev/sdX` (ADR-022) |
 | 2.0 | 2026-10-09 | Runbook Agent | Estado cambiado a Aprobado |
+| 2.1 | 2026-10-09 | Runbook Agent | Escenario C: bahías según HLD v2 2.1 §2 (ADR-023): 1 Toshiba D1, 2 vacía, 3 WD Blue paridad, 4 QVO D2; Si falla del paso 4 = intercambio Toshiba/WD si > 40 °C sostenidos |
+| 2.1 | 2026-10-09 | Runbook Agent | Estado cambiado a Aprobado |
