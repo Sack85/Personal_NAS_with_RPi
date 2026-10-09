@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | HLD |
-| **Versión** | 2.0 |
+| **Versión** | 2.1 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
 | **Última modificación** | 2026-10-09 |
@@ -76,9 +76,12 @@ apaga el NAS si el calor se mantiene. La limpieza de fotos de Immich archiva en 
 | SAI | Con USB compatible con NUT (por confirmar o comprar, 60–90 €) | Apagado limpio en cortes |
 | Descartado | Hitachi 320 GB | No se usa (NRD §1) |
 
-Bahías: 1 = WD Blue (paridad), 2 = vacía, 3 = Toshiba MK1059 (D1, la de más aire),
-4 = Samsung QVO (D2, la de menos aire). Los dos mecánicos quedan separados por la bahía vacía
-(guía §1). FFC con la cara negra hacia fuera y los dos pestillos cerrados. El NAS va en balda
+Bahías reales, comprobadas por puerto ATA del HAT el 2026-10-09 (ADR-023): 1 = Toshiba MK1059
+(D1, serie Y1NDFAQES, recibe aire del ventilador superior), 2 = vacía, 3 = WD Blue (paridad,
+serie WD-WXU1EB6APMW5), 4 = Samsung QVO (D2, serie S5SVNG0N868475F). Los dos mecánicos quedan
+separados por la bahía vacía (guía §1). No se mueven discos; si el Toshiba supera 40 °C de forma
+sostenida se intercambia de bahía con el WD Blue (los roles no cambian: montaje por UUID, ADR-022).
+FFC con la cara negra hacia fuera y los dos pestillos cerrados. El NAS va en balda
 alta y abierta, lejos del sol y del chorro del aire acondicionado, con el filtro en la entrada
 de aire. La bahía 2 queda libre para una ampliación futura (riesgo "Pool lleno").
 
@@ -141,8 +144,8 @@ siguen disponibles por la IP local. Vuelta atrás: desactivar los temporizadores
 | Rol | Disco | Tamaño | Conexión | Sistema de ficheros | Montaje | En pool | Content |
 |---|---|---|---|---|---|---|---|
 | Sistema | Toshiba XG5 NVMe | 512 GB | USB 3 (caja) | ext4 | / | No | Sí |
-| Paridad | WD Blue | 1 TB | SATA bahía 1 | ext4 (0 % reservado) | /srv/dev-disk-by-uuid-… (parity) | No | No |
-| D1 | Toshiba MK1059 | 1 TB | SATA bahía 3 | ext4 (0 % reservado) | /srv/dev-disk-by-uuid-… (d1) | Sí | Sí |
+| Paridad | WD Blue | 1 TB | SATA bahía 3 | ext4 (0 % reservado) | /srv/dev-disk-by-uuid-… (parity) | No | No |
+| D1 | Toshiba MK1059 | 1 TB | SATA bahía 1 | ext4 (0 % reservado) | /srv/dev-disk-by-uuid-… (d1) | Sí | Sí |
 | D2 | Samsung QVO | 1 TB | SATA bahía 4 | ext4 (0 % reservado) | /srv/dev-disk-by-uuid-… (d2) | Sí | Sí |
 | Backup | Disco USB externo | 4 TB | USB 3, desconectado (SMART con `smartctl -d sat`) | ext4, etiqueta `backup` | /mnt/backup (solo durante la copia) | No | No |
 
@@ -380,6 +383,7 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | ADR-020 | Sudo sin contraseña para `nas` (`/etc/sudoers.d/010-nas-nopasswd`) | Sudo con contraseña (el agente no puede ejecutar cambios); usar root por SSH | El agente ejecuta los cambios de los runbooks aprobados por SSH; mitigación: clave ed25519 solo en el PC, guard con confirmación de cambios y bloqueo de destructivos, SSH por contraseña desactivado al funcionar la clave | NRD §7 |
 | ADR-021 | EEPROM con `BOOT_ORDER=0xf41` y sin `PSU_MAX_CURRENT`; cambio opcional futuro con SD "Bootloader USB Boot" | Forzar el cambio desde USB; `PSU_MAX_CURRENT=5000` | `rpi-eeprom-config` no aplica desde USB (`nospi10`); arranca bien por USB sin SD; `usb_max_current_enable=1` cubre la corriente | NRD §6 |
 | ADR-022 | Identificar discos siempre por `/dev/disk/by-id` y montar por UUID | `/dev/sdX` | Las letras `sdX` cambian entre arranques (OPS-2026-10-09-rbk01-03); un error de letra en un paso destructivo borra el disco equivocado | NRD §5 |
+| ADR-023 | Bahías según montaje real (1 = Toshiba D1, 2 = vacía, 3 = WD Blue paridad, 4 = QVO D2) sin mover discos; si el Toshiba supera 40 °C sostenidos se intercambia con el WD. Sustituye al reparto de bahías de la v2.0 | Mover discos al reparto previsto (WD en 1, Toshiba en 3) | Decisión del usuario 2026-10-09: el Toshiba recibe aire del ventilador superior y los mecánicos siguen separados por la bahía vacía; mover discos no aporta y arriesga el montaje; roles y montaje por UUID no dependen de la bahía | NRD §6.2 |
 
 ## 12. Riesgos
 
@@ -417,3 +421,5 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | 1.1 | 2026-10-09 | Architect Agent | Estado cambiado a Aprobado |
 | 2.0 | 2026-10-09 | Architect Agent | Aprendizajes de OPS-2026-10-09-rbk01-03: IP 192.168.1.11 con reserva DHCP (ADR-019); sudo sin contraseña para `nas` con mitigaciones (ADR-020); EEPROM sin cambios (ADR-021); tamaños verificados (1 000 204 886 016 bytes, paridad WD válida); discos por `/dev/disk/by-id` (ADR-022) |
 | 2.0 | 2026-10-09 | Architect Agent | Estado cambiado a Aprobado |
+| 2.1 | 2026-10-09 | Architect Agent | Bahías reales comprobadas por puerto ATA: Toshiba en 1, WD Blue (paridad) en 3; sin mover discos, intercambio si el Toshiba supera 40 °C sostenidos (ADR-023). Roles sin cambios |
+| 2.1 | 2026-10-09 | Architect Agent | Estado cambiado a Aprobado |

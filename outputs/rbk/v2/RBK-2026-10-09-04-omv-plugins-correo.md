@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 04 — OpenMediaVault 8, plugins y correo |
-| **Versión** | 2.0 |
-| **Estado** | En revisión |
+| **Versión** | 2.1 |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
 | **Última modificación** | 2026-10-09 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 2 h |
 
@@ -17,11 +17,18 @@
 
 Instalar OpenMediaVault 8 con los scripts de omv-extras, cambiar la contraseña de `admin`, mover
 la web al puerto 8000, instalar los plugins snapraid, mergerfs, sharerootfs y compose, y dejar
-los avisos por correo de Gmail probados (HLD §3, §6, §10).
+los avisos por correo de Gmail probados (HLD v2 2.1 §3, §6, §10). El NAS es `nas` en 192.168.1.11
+(reserva DHCP, ADR-019); el agente entra como usuario `nas` con clave ed25519 y ejecuta con `sudo`
+sin contraseña (ADR-020): el guard SSH pide confirmación de cada cambio. SSH sigue solo con clave
+después de instalar OMV (HLD §8): OMV regenera `sshd_config` y no debe reactivar
+`PasswordAuthentication`.
 
 ## Prerrequisitos
 
-- [ ] RBK 03 completado: `ssh nas` funciona y los tres discos aparecen
+- [ ] HLD v2 2.1 aprobado
+- [ ] RBK 03 completado: `ssh nas` funciona (usuario `nas`, 192.168.1.11, solo clave) y los tres discos aparecen
+- [ ] `ssh nas 'sudo -n true && echo ok'` devuelve `ok` (sudo sin contraseña, ADR-020)
+- [ ] Acceso de emergencia sin SSH disponible (pantalla y teclado) por si OMV cierra el SSH
 - [ ] Contraseña de aplicación de Gmail creada y guardada en el gestor de contraseñas
 - [ ] Contraseña nueva de `admin` de OMV creada en el gestor de contraseñas
 
@@ -85,9 +92,9 @@ Comando:
 ssh nas 'systemctl status openmediavault-engined --no-pager | head -n 5; dpkg -l openmediavault | tail -n 1'
 ```
 
-Esperado: `active (running)` y una versión 8.x de `openmediavault`.
+Esperado: `active (running)` y una versión 8.x de `openmediavault`. El propio `ssh nas` ha entrado con la clave (sin pedir contraseña): la instalación de OMV no ha roto el acceso.
 
-Si falla: si no está activo, revisa `ssh nas 'sudo journalctl -u openmediavault-engined -n 50'` y para.
+Si falla: si no está activo, revisa `ssh nas 'sudo journalctl -u openmediavault-engined -n 50'` y para. Si `ssh nas` pide contraseña o es rechazado, para y ve al paso 11 desde la consola local.
 
 ### Paso 4: Primer acceso y contraseña de admin
 
@@ -192,12 +199,49 @@ Esperado: ninguna línea `Unattended-Upgrade::Automatic-Reboot "true"`. Las actu
 
 Si falla: si aparece a `true`, anótalo como incidencia y prepara el cambio con `/maintainer-plugin:create-upd`.
 
+### Paso 11: Servicio SSH de OMV solo con clave
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | Cambio |
+| **Ejecuta** | Usuario |
+| **Dónde** | Web de OMV |
+| **HLD** | v2 2.1 §8, ADR-020 |
+
+Esperado: Servicios → SSH: activado, puerto 22, «Autenticación por contraseña» desmarcada, «Autenticación por clave pública» marcada, inicio de sesión de root no permitido. Guardado y cambios pendientes aplicados. OMV genera `sshd_config` desde su base de datos: esta pantalla es la que manda; no se edita `/etc/ssh/sshd_config` a mano porque OMV lo sobrescribe. Usuarios → Usuarios → `nas`: grupo `_ssh` presente (OMV solo deja entrar por SSH a root y a `_ssh`).
+
+Si falla: si al aplicar se pierde `ssh nas`, entra por la consola local y añade `nas` al grupo `_ssh` desde Usuarios → Usuarios → Editar; vuelve a aplicar y repite el paso 12. No reactives la contraseña para salir del paso.
+
+### Paso 12: Comprobar que sshd sigue solo con clave
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | Lectura |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH |
+| **HLD** | v2 2.1 §8, ADR-020 |
+
+Comando:
+
+```bash
+ssh -o BatchMode=yes nas 'hostname; id -nG; sudo -n sshd -T | grep -Ei "^(passwordauthentication|pubkeyauthentication|permitrootlogin|port) "'
+ssh -o BatchMode=yes -o PubkeyAuthentication=no -o PreferredAuthentications=password nas true 2>&1 | tail -n 1
+```
+
+Fuente: `man sshd` (opción `-T`, configuración efectiva) y `man ssh_config` (`BatchMode`, `PreferredAuthentications`).
+
+Esperado: `nas`; los grupos incluyen `_ssh` y `sudo`; `passwordauthentication no`, `pubkeyauthentication yes`, `permitrootlogin no`, `port 22`. La segunda orden termina en `Permission denied (publickey)`: el servidor ya no ofrece contraseña.
+
+Si falla: si `passwordauthentication yes` o la segunda orden ofrece `password`, repite el paso 11 y vuelve a comprobar; si sigue, anota la incidencia en el OPS y para (HLD §8).
+
 ## Verificación final
 
 | Comprobación | Comando | Esperado |
 |---|---|---|
 | OMV en marcha | `ssh nas systemctl is-active openmediavault-engined` | active |
 | Web en 8000 | `curl -s -o /dev/null -w '%{http_code}' http://nas.local:8000` | 200 |
+| SSH solo con clave | `ssh nas "sudo sshd -T \| grep -Ei '^(passwordauthentication\|pubkeyauthentication)'"` | `passwordauthentication no`, `pubkeyauthentication yes` |
+| `ssh nas` | `ssh -o BatchMode=yes nas hostname` | nas |
 | Puerto 80 libre | `ssh nas "sudo ss -ltnp \| grep -c ':80 '"` | 0 |
 | Correo | `bandeja de entrada` | correo de prueba recibido |
 
@@ -222,3 +266,5 @@ Ninguna.
 |---|---|---|---|
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado); cita la nueva versión. Comprobado que identifica los discos por by-id o UUID, nunca por `/dev/sdX` (ADR-022) |
+| 2.1 | 2026-10-09 | Runbook Agent | Escenario C: cita HLD v2 2.1; usuario `nas`, IP 192.168.1.11 (ADR-019), sudo sin contraseña con confirmación del guard (ADR-020) en prerrequisitos; paso 3 comprueba que `ssh nas` sigue con clave; nuevos pasos 11 (Servicios → SSH solo clave, grupo `_ssh`) y 12 (`sshd -T`) para que OMV no reactive PasswordAuthentication; verificación final ampliada |
+| 2.1 | 2026-10-09 | Runbook Agent | Estado cambiado a Aprobado |
