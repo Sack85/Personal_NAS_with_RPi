@@ -1,0 +1,15 @@
+network:
+  ethernets:
+    eth0:
+      match:
+        macaddress: "d8:3a:dd:a4:c5:c3"
+      accept-ra: true
+      dhcp4: yes
+      dhcp4-overrides:
+        use-dns: true
+        use-domains: true
+      dhcp6: yes
+      dhcp6-overrides:
+        use-dns: true
+        use-domains: true
+      link-local: [ipv4, ipv6]
