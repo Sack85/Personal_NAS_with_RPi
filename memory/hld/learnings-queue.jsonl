@@ -1,0 +1,1 @@
+{"skill": "update-hld", "date": "2026-10-09", "correction": "El HLD dejaba los tamaños de disco y la IP sin verificar; la ejecución mostró que sdX cambia entre arranques", "pattern": "Siempre identificar discos por /dev/disk/by-id en el HLD y nunca por /dev/sdX", "status": "pending"}
