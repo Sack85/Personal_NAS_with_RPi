@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 06 — SnapRAID |
-| **Versión** | 2.0 |
-| **Estado** | En revisión |
+| **Versión** | 2.1 |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
-| **Última modificación** | 2026-10-09 |
+| **Última modificación** | 2026-10-13 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 1 h |
 
@@ -21,8 +21,8 @@ programación diaria a las 23:30 con umbral de 50 borrados y scrub semanal del 1
 
 ## Prerrequisitos
 
-- [ ] RBK 05 completado: tres ext4 montados y tabla Rol → UUID → montaje
-- [ ] Sesión iniciada por el usuario en la web de OMV
+- [ ] RBK 05 completado (OPS-2026-10-13-rbk05 Aprobado); tabla Rol → UUID → montaje en `state/config/montajes.md`: parity `a31e93cf…`, d1 `1d82d7b3…`, d2 `56801884…`
+- [ ] Web de OMV accesible en http://192.168.1.11:8000 (solo para consultar; la configuración se hace por SSH con `omv-rpc`, sin sesión web)
 
 ## Pasos
 
@@ -50,26 +50,68 @@ Si falla: si falta uno, para y vuelve al RBK 05.
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH (`omv-rpc` del plugin SnapRAID; desviación aceptada en las fases 04-05) |
 | **HLD** | §5 SnapRAID |
 
-Esperado: Servicios → SnapRAID → Arrays → Crear `nas`. Discos: WD Blue = `parity` (paridad sí, datos no, content no); Toshiba = `d1` (datos sí, content sí); QVO = `d2` (datos sí, content sí); sistema de archivos raíz = `ssd` (solo content). Cada disco elegido por su UUID del RBK 05.
+Comprobación previa (Lectura): obtener los `uuid` de las entradas de FsTab (mntentref) de parity, d1, d2 y la raíz (sharerootfs) y compararlos con `state/config/montajes.md`:
 
-Si falla: si la raíz no aparece, comprueba que `openmediavault-sharerootfs` está instalado (RBK 04 paso 7).
+```bash
+ssh -t nas "sudo omv-rpc -u admin FsTab getList '{\"start\":0,\"limit\":-1}'"
+```
+
+Comandos (una orden por línea; no pegues más de una línea tras `ssh nas`). Primero el array; anota el `uuid` que devuelve:
+
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid setArray '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"nas\"}'"
+```
+
+Después un `setDrive` por disco, con `arrayref` = uuid del array y `mntentref` = uuid de FsTab del disco:
+
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid setDrive '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"arrayref\":\"<uuid-array>\",\"mntentref\":\"<mntent-parity>\",\"name\":\"parity\",\"parity\":true,\"paritynum\":1,\"data\":false,\"content\":false}'"
+```
+
+- `d1`: `data true`, `content true`, `parity false`.
+- `d2`: `data true`, `content true`, `parity false`.
+- `ssd` (raíz vía sharerootfs): `content true`, `data false`, `parity false`.
+
+Comprobación:
+
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid getDriveList '{\"start\":0,\"limit\":-1}'"
+```
+
+Esperado: un array `nas` y cuatro discos: `parity` (solo paridad, paritynum 1), `d1` y `d2` (datos + content), `ssd` (solo content); cada `mntentref` coincide con el UUID de `state/config/montajes.md`.
+
+Si falla: si la raíz no aparece en FsTab, comprueba que `openmediavault-sharerootfs` está instalado (RBK 04 paso 7). Si `omv-rpc` rechaza un campo, lee la firma con `sudo omv-rpc -u admin SnapRaid getDrive` sobre un disco creado, anótalo en el OPS y para.
 
 ### Paso 3: Añadir las exclusiones
 
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH (`omv-rpc`) |
 | **HLD** | §5 SnapRAID |
 
-Esperado: Reglas → Excluir: `*.unrecoverable`, `/lost+found/`, `/tmp/`, `.Trash-*/`, `.recycle/`, `/Imagenes/.immich-tmp/`. Guardado y aplicado.
+Comando (uno por regla, `rtype 1` = excluir; una orden por línea):
 
-Si falla: si OMV rechaza un patrón, anótalo y aplica el resto.
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid setRule '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"arrayref\":\"<uuid-array>\",\"mntentref\":\"<mntent-d1>\",\"rule\":\"*.unrecoverable\",\"rtype\":1}'"
+```
+
+Las seis reglas: `*.unrecoverable`, `/lost+found/`, `/tmp/`, `.Trash-*/`, `.recycle/`, `/Imagenes/.immich-tmp/`.
+
+Comprobación (sin duplicados):
+
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid getRuleList '{\"start\":0,\"limit\":-1}' | grep -o '\"rule\":\"[^\"]*\"' | sort | uniq -c"
+```
+
+Esperado: seis reglas `rtype 1`, cada una con recuento 1.
+
+Si falla: si OMV rechaza un patrón, anótalo en el OPS y aplica el resto.
 
 ### Paso 4: Leer la configuración generada
 
@@ -80,10 +122,20 @@ Si falla: si OMV rechaza un patrón, anótalo y aplica el resto.
 | **Dónde** | NAS por SSH |
 | **HLD** | §5 |
 
-Comando:
+Antes, aplicar la configuración generada (Cambio) y listar los ficheros:
 
 ```bash
-ssh nas 'cat /etc/snapraid/omv-snapraid-*.conf'
+ssh -t nas "sudo omv-salt deploy run snapraid"
+```
+
+```bash
+ssh nas 'ls -1 /etc/snapraid/'
+```
+
+Debe haber un solo `omv-snapraid-<uuid>.conf`. Si hay dos o más, para: no se usa comodín. Lee el fichero exacto:
+
+```bash
+ssh nas 'cat /etc/snapraid/omv-snapraid-<uuid>.conf'
 ```
 
 Esperado: una línea `parity` en el montaje del WD Blue, tres `content` (d1, d2 y la raíz), `data d1` y `data d2` en sus montajes y las seis exclusiones. Anota en el OPS la ruta real del content del SSD.
@@ -101,8 +153,14 @@ Si falla: si la paridad apunta a un disco de datos, para y corrige el paso 2 ant
 
 Comando:
 
+Usa la ruta exacta anotada en el paso 4 (nunca comodín). Una orden por línea:
+
 ```bash
-ssh nas 'sudo snapraid -c /etc/snapraid/omv-snapraid-*.conf sync && sudo snapraid -c /etc/snapraid/omv-snapraid-*.conf status'
+ssh -t nas "sudo snapraid -c /etc/snapraid/omv-snapraid-<uuid>.conf sync"
+```
+
+```bash
+ssh -t nas "sudo snapraid -c /etc/snapraid/omv-snapraid-<uuid>.conf status"
 ```
 
 Esperado: el sync termina con `Everything OK` y `status` dice `No error detected`.
@@ -114,13 +172,35 @@ Si falla: si sync falla por falta de espacio en la paridad, para y vuelve al arq
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH (`omv-rpc`) |
 | **HLD** | §5 SnapRAID, §7, ADR-015 |
 
-Esperado: en la programación del diff del plugin SnapRAID: diario a las 23:30; umbral de borrados 50 (no sincroniza y avisa por correo); scrub cada 7 días con 12 % de los bloques de más de 10 días; envío del informe por correo activado. Aplicado.
+Ajustes del plugin (valores ya puestos; el resto, por defecto):
 
-Si falla: si el plugin no permite fijar la hora, crea la tarea en Sistema → Tareas programadas a las 23:30 con el script de diff del plugin y anótalo en el OPS.
+```bash
+ssh -t nas "sudo omv-rpc -u admin SnapRaid setSettings '{\"percentscrub\":12,\"scrubfreq\":7,\"runscrub\":true,\"delthreshold\":50,\"updthreshold\":0,\"sendmail\":true,\"scrubpercent\":12,\"defaultarray\":\"<uuid-array>\"}'"
+```
+
+Comprueba el nombre real del script del diff antes de programarlo:
+
+```bash
+ssh nas 'ls -l /usr/sbin/omv-snapraid*'
+```
+
+Tarea programada de OMV a las 23:30 (si el script tiene otro nombre, usa el real):
+
+```bash
+ssh -t nas "sudo omv-rpc -u admin Cron set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"enable\":true,\"execution\":\"exactly\",\"minute\":[\"30\"],\"everynminute\":false,\"hour\":[\"23\"],\"everynhour\":false,\"dayofmonth\":[\"*\"],\"everyndayofmonth\":false,\"month\":[\"*\"],\"dayofweek\":[\"*\"],\"username\":\"root\",\"command\":\"/usr/sbin/omv-snapraid-diff\",\"sendemail\":true,\"comment\":\"SnapRAID diff/sync/scrub\"}'"
+```
+
+```bash
+ssh -t nas "sudo omv-salt deploy run snapraid cron"
+```
+
+Esperado: `setSettings` y `Cron set` devuelven el objeto guardado; diario a las 23:30; umbral de borrados 50; scrub cada 7 días tras el sync con el 12 %; correo activado.
+
+Si falla: si `omv-rpc` rechaza un campo, anótalo en el OPS y para; no se sigue con la web sin actualizar el RBK.
 
 ### Paso 7: Comprobar la programación
 
@@ -137,7 +217,7 @@ Comando:
 ssh nas "sudo grep -rn -i snapraid /etc/cron.d /etc/crontab /var/spool/cron 2>/dev/null; sudo grep -rn -i -E 'threshold|scrub' /etc/snapraid/ 2>/dev/null"
 ```
 
-Esperado: una entrada a las 23:30 (`30 23 * * *` o un temporizador equivalente) y los valores 50, 12 y 10 en la configuración del diff.
+Esperado: una entrada a las 23:30 (`30 23 * * *`) con el script real de diff del plugin, y los valores 50 y 12 en la configuración del diff. Comprueba que no hay duplicados: `ssh nas "sudo grep -rc '30 23' /etc/cron.d/openmediavault-userdefined"` devuelve 1.
 
 Si falla: si la hora no es 23:30, vuelve al paso 6: las 23:00 y 23:05 son de Immich y AIO.
 
@@ -145,8 +225,8 @@ Si falla: si la hora no es 23:30, vuelve al paso 6: las 23:00 y 23:05 son de Imm
 
 | Comprobación | Comando | Esperado |
 |---|---|---|
-| Estado del array | `ssh nas 'sudo snapraid -c /etc/snapraid/omv-snapraid-*.conf status'` | No error detected |
-| Content x3 | `ssh nas "grep -c '^content' /etc/snapraid/omv-snapraid-*.conf"` | 3 |
+| Estado del array | `ssh -t nas "sudo snapraid -c /etc/snapraid/omv-snapraid-<uuid>.conf status"` | No error detected |
+| Content x3 | `ssh nas "grep -c '^content' /etc/snapraid/omv-snapraid-<uuid>.conf"` | 3 |
 | Programación | `ssh nas "sudo grep -rn snapraid /etc/cron.d"` | entrada a las 23:30 |
 
 ## Vuelta atrás
@@ -166,8 +246,9 @@ usuario). No hay datos en el pool todavía.
 | Pregunta | Responsable | Fecha límite |
 |---|---|---|
 | Ruta del content del SSD: el HLD dice `/var/snapraid/`; el plugin puede usar otra ruta en la raíz. Se anota la real en el paso 4 y, si difiere, se informa al arquitecto | Runbook Agent | Ejecución del RBK 06 |
-| El scrub del plugin va por días desde el último scrub (7) y no por día de la semana: el HLD pide domingo. Se acepta «cada 7 días tras el sync» o se crea una tarea aparte el domingo a las 23:30 | Persona 1 | Antes de aprobar este RBK |
-| Nombre exacto de los menús de programación del plugin SnapRAID en OMV 8: confirmar en la primera ejecución y corregir el RBK | Runbook Agent | Ejecución del RBK 06 |
+| Nombre real del script de diff del plugin (`/usr/sbin/omv-snapraid-diff` previsto): se confirma en el paso 6 y se anota en el OPS | Runbook Agent | Ejecución del RBK 06 |
+
+Cerrada (2026-10-13, Persona 1): el scrub se acepta «cada 7 días tras el sync» en lugar del domingo.
 
 ## Historial de versiones
 
@@ -175,3 +256,5 @@ usuario). No hay datos en el pool todavía.
 |---|---|---|---|
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado); cita la nueva versión. Comprobado que identifica los discos por by-id o UUID, nunca por `/dev/sdX` (ADR-022) |
+| 2.1 | 2026-10-13 | Runbook Agent | Cambio menor (visto bueno del usuario): cita HLD v2 (2.1); prerrequisitos con OPS-2026-10-13-rbk05 y UUID de `state/config/montajes.md`; pasos 2, 3 y 6 los hace el Agente por SSH con `omv-rpc` (desviación aceptada en fases 04-05) en vez de la web; tarea Cron de OMV a las 23:30; sync con la conf exacta, sin comodín; cerrada la pregunta del scrub (cada 7 días tras el sync) |
+| 2.1 | 2026-10-13 | Runbook Agent | Estado cambiado a Aprobado |

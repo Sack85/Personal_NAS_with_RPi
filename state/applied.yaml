@@ -31,5 +31,11 @@ rbk:
     ops: OPS-2026-10-13-rbk05-discos-smart-formateo.md
     fecha: 2026-10-13
     resultado: Completado
+  "06":
+    version: v2 (2.1)
+    fichero: RBK-2026-10-09-06-snapraid.md
+    ops: OPS-2026-10-13-rbk06-snapraid.md
+    fecha: 2026-10-13
+    resultado: Completado
 upd: []
 dcp: []
