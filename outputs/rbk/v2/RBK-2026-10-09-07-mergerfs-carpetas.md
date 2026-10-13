@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 07 — MergerFS y carpetas compartidas |
-| **Versión** | 2.0 |
-| **Estado** | En revisión |
+| **Versión** | 2.1 |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
-| **Última modificación** | 2026-10-09 |
+| **Última modificación** | 2026-10-13 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 1 h |
 
@@ -21,8 +21,9 @@ Archivo con el propietario `www-data` donde Nextcloud debe escribir (HLD §5 Mer
 
 ## Prerrequisitos
 
-- [ ] RBK 06 completado: array `nas` sin errores
-- [ ] Sesión iniciada por el usuario en la web de OMV
+- [ ] RBK 06 completado: array `nas` sin errores (OPS-2026-10-13-rbk06-snapraid, Aprobado)
+- [ ] Sin sesión web: la configuración se hace por SSH con `omv-rpc` (desviación aceptada en las fases 04-06)
+- [ ] Mntentref de los discos: D1 `16149efb-1cfa-413c-9299-f76789695e51`, D2 `96abea2b-3167-46f5-9aef-5901943d833d`; la paridad (`1901249d…`) nunca entra en el pool
 
 ## Pasos
 
@@ -31,13 +32,22 @@ Archivo con el propietario `www-data` donde Nextcloud debe escribir (HLD §5 Mer
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH (`omv-rpc` del plugin mergerfs; desviación aceptada en las fases 04-06) |
 | **HLD** | §5 MergerFS, ADR-016 |
 
-Esperado: Almacenamiento → mergerfs → Crear: nombre `pool`; sistemas de archivos D1 y D2 (nunca la paridad); política de creación `mfs`; espacio libre mínimo `20G`; opciones `cache.files=off,dropcacheonclose=true,category.search=ff`. Guardado y aplicado.
+Comando (una orden por línea; no pegues varias líneas tras `ssh nas`):
 
-Si falla: si OMV no acepta una opción, guarda sin ella, anótala y avisa al arquitecto.
+```bash
+ssh -t nas "sudo omv-rpc -u admin Mergerfs set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"pool\",\"mntentref\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"filesystems\":[\"16149efb-1cfa-413c-9299-f76789695e51\",\"96abea2b-3167-46f5-9aef-5901943d833d\"],\"paths\":null,\"sharedfolderrefs\":[],\"createpolicy\":\"mfs\",\"minfreespace\":20,\"minfreespaceunit\":\"G\",\"options\":\"cache.files=off,dropcacheonclose=true,category.search=ff\"}'"
+ssh -t nas "sudo omv-salt deploy run mergerfs"
+ssh -t nas "sudo omv-salt deploy run fstab"
+ssh -t nas "sudo omv-rpc -u admin Mergerfs getList '{\"start\":0,\"limit\":-1}'"
+```
+
+Esperado: `set` devuelve el objeto con un `uuid` y un `mntentref` nuevos (no el uuid de plantilla); `filesystems` contiene solo los mntentref de D1 y D2; los dos `deploy` terminan sin `Failed`; `getList` muestra un único pool `pool` con `createpolicy` `mfs`, `minfreespace` 20 G y las opciones del HLD. El `deploy run fstab` solo hace falta si el pool no queda montado tras el de mergerfs (ver paso 2).
+
+Si falla: si `omv-rpc` rechaza un campo, lee la firma con `sudo omv-rpc -u admin Mergerfs getList '{"start":0,"limit":-1}'`, anótalo en el OPS y para. Si `filesystems` incluye `1901249d…` (paridad), borra el pool y repite.
 
 ### Paso 2: Comprobar el pool montado y sus opciones
 
@@ -63,13 +73,26 @@ Si falla: si aparece la rama de la paridad, borra el pool y vuelve al paso 1.
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH (`omv-rpc`; desviación aceptada en las fases 04-06) |
 | **HLD** | §6 |
 
-Esperado: Almacenamiento → Carpetas compartidas, sobre el sistema de archivos `pool`: `Documentos_persona1` (ruta `Documentos/persona1/`), `Documentos_persona2` (ruta `Documentos/persona2/`), `Imagenes` (`Imagenes/`), `Videos` (`Videos/`) y `Archivo` (`Archivo/`).
+Comando: primero lee el mntentref del pool; después, una orden `ShareMgmt set` por carpeta con ese valor en `<mntent-pool>` (una orden por línea; no pegues varias líneas tras `ssh nas`):
 
-Si falla: si OMV crea la ruta con otro nombre, renómbrala antes de seguir: los RBK 08, 10, 11 y 15 usan estas rutas.
+```bash
+ssh -t nas "sudo omv-confdbadm read conf.system.filesystem.mountpoint | grep -B2 -A2 mergerfs"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"Documentos_persona1\",\"mntentref\":\"<mntent-pool>\",\"reldirpath\":\"Documentos/persona1/\",\"mode\":\"775\",\"comment\":\"\"}'"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"Documentos_persona2\",\"mntentref\":\"<mntent-pool>\",\"reldirpath\":\"Documentos/persona2/\",\"mode\":\"775\",\"comment\":\"\"}'"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"Imagenes\",\"mntentref\":\"<mntent-pool>\",\"reldirpath\":\"Imagenes/\",\"mode\":\"775\",\"comment\":\"\"}'"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"Videos\",\"mntentref\":\"<mntent-pool>\",\"reldirpath\":\"Videos/\",\"mode\":\"775\",\"comment\":\"\"}'"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt set '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"name\":\"Archivo\",\"mntentref\":\"<mntent-pool>\",\"reldirpath\":\"Archivo/\",\"mode\":\"775\",\"comment\":\"\"}'"
+ssh -t nas "sudo omv-salt deploy run sharedfolders"
+ssh -t nas "sudo omv-rpc -u admin ShareMgmt getList '{\"start\":0,\"limit\":-1}' | grep -o '\"name\":\"[^\"]*\"' | sort | uniq -c"
+```
+
+Esperado: el `read` muestra una sola entrada con `fsname` del pool mergerfs y `dir` `/srv/mergerfs/pool`, y su `uuid` es `<mntent-pool>` (nunca un mntentref de D1, D2 o la paridad); cada `set` devuelve un `uuid` nuevo; `deploy run sharedfolders` sin `Failed` (si el módulo no existe en esta versión, se anota y se sigue: las carpetas quedan en la base de datos); el último `grep` da exactamente 5 nombres, cada uno con `1` (sin duplicados): `Archivo`, `Documentos_persona1`, `Documentos_persona2`, `Imagenes`, `Videos`.
+
+Si falla: si algún nombre sale con `2`, borra el duplicado con `ShareMgmt delete` antes de seguir; si OMV crea la ruta con otro nombre, corrígela antes de seguir: los RBK 08, 10, 11 y 15 usan estas rutas.
 
 ### Paso 4: Crear subcarpetas y propietario www-data
 
@@ -140,19 +163,17 @@ Si falla: si la escritura falla con «No space left», revisa `minfreespace` en 
 
 ## Vuelta atrás
 
-Borrar el pool y las carpetas compartidas en OMV (en orden inverso a su creación); los ficheros
+Borrar las carpetas compartidas (`ShareMgmt delete`) y después el pool (`Mergerfs delete` + `omv-salt deploy run mergerfs fstab`) (en orden inverso a su creación); los ficheros
 de cada disco siguen en sus ramas. Las subcarpetas vacías se dejan o las borra el usuario.
 
 ## Evidencias
 
 - Salida de `ps -eo args | grep mergerfs` en el OPS
-- Capturas 7.1 y 7.2 en el OPS
+- Salidas de `Mergerfs getList` y `ShareMgmt getList` en el OPS (sin capturas: no hay sesión web)
 
 ## Preguntas abiertas
 
-| Pregunta | Responsable | Fecha límite |
-|---|---|---|
-| Para que el «otro» tenga solo lectura por SMB en `Documentos/personaN` (HLD §6 tabla de carpetas), el runbook crea una carpeta compartida por persona (`Documentos_persona1/2`) en lugar de una sola `Documentos`. Confirmar con el arquitecto y reflejar en el HLD | Persona 1 | Antes de aprobar este RBK |
+Ninguna. Cerrada el 2026-10-13: el usuario acepta dos carpetas compartidas `Documentos_persona1` y `Documentos_persona2` (requisito: cada persona escribe en la suya y lee la del otro; los permisos SMB se ponen en el RBK 08).
 
 ## Historial de versiones
 
@@ -160,3 +181,5 @@ de cada disco siguen en sus ramas. Las subcarpetas vacías se dejan o las borra 
 |---|---|---|---|
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado); cita la nueva versión. Comprobado que identifica los discos por by-id o UUID, nunca por `/dev/sdX` (ADR-022) |
+| 2.1 | 2026-10-13 | Runbook Agent | Cita HLD v2 (2.1); prerrequisito OPS-2026-10-13-rbk06 Aprobado, sin sesión web. Pasos 1 y 3 pasan a Agente por SSH con `omv-rpc` (`Mergerfs set`, `ShareMgmt set`, `omv-salt deploy`), desviación aceptada como en 04-06; paridad excluida. Cerrada la pregunta de `Documentos_persona1/2` (aceptada por el usuario) |
+| 2.1 | 2026-10-13 | Runbook Agent | Estado cambiado a Aprobado (visto bueno del usuario 2026-10-13) |
