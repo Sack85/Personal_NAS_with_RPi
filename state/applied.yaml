@@ -1,5 +1,5 @@
 # Qué está aplicado en el NAS. Lo actualiza /operator-plugin:approve-ops; no editar a mano.
-hld: v1
+hld: v2 (2.1)
 rbk:
   "01":
     version: v1
@@ -19,5 +19,11 @@ rbk:
     ops: OPS-2026-10-09-rbk01-03-montaje-arranque.md
     fecha: 2026-10-09
     resultado: Completado con incidencias (pasos 3 y 9 omitidos por decisión del usuario)
+  "04":
+    version: v2 (2.2)
+    fichero: RBK-2026-10-09-04-omv-plugins-correo.md
+    ops: OPS-2026-10-09-rbk04-omv-plugins-correo.md
+    fecha: 2026-10-13
+    resultado: Completado
 upd: []
 dcp: []

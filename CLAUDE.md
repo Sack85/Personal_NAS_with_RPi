@@ -54,11 +54,18 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
 ## Aprendizajes
 
 <!-- AUTO-LEARNINGS:START (managed by .claude/hooks/sync_learnings_to_claude_md.py — do not edit by hand) -->
-_Sin aprendizajes nuevos pendientes._
+- `create-ops` (2026-10-09): Siempre dar los comandos de pasos con reinicio uno a uno y avisar de no pegar varias lineas tras ssh nas
+- `create-rbk` (2026-10-09): Siempre antes de un paso que reinstale o reconfigure el sistema añade un paso de imagen del SSD tras 'sudo poweroff' y una sección de recuperación sin pantalla; nunca desenchufar con el LED verde parpadeando
+- `update-hld` (2026-10-09): Siempre identificar discos por /dev/disk/by-id en el HLD y nunca por /dev/sdX
+- `update-nrd` (2026-10-08): Siempre usa Irreemplazable, Reemplazable o Mixta (con la parte entre paréntesis) en la columna Criticidad, y cifras numéricas en Crecimiento
+- `update-rbk` (2026-10-09): Siempre da los bloques de configuración con los valores ya puestos y añade un grep -c que compruebe que no quedan duplicados
+- `update-rbk` (2026-10-09): Siempre indica el puerto físico exacto (USB-A azul) y advierte de que el USB-C de la Pi 5 es solo de alimentación
+- `update-rbk` (2026-10-09): Siempre que un paso instale software que gestione sshd (OMV), añadir comprobación posterior con ssh -o BatchMode=yes nas hostname y sudo sshd -T | grep passwordauthentication
 <!-- AUTO-LEARNINGS:END -->
 
 ## Qué no hacer
 
 <!-- AUTO-WHATNOT:START (managed by .claude/hooks/sync_learnings_to_claude_md.py — do not edit by hand) -->
-_Sin aprendizajes nuevos pendientes._
+- `create-rbk` (2026-10-09): Nunca escribas un bloque que abra 'ssh nas' y siga con comandos del NAS; usa una orden por línea 'ssh -t nas "…"' y avisa de no pegar varias líneas
+- `update-rbk` (2026-10-09): Nunca uses /dev/sdX en un paso; identifica cada disco por /dev/disk/by-id/<bus>-<MODELO>_<SERIE> y compáralo por número de serie
 <!-- AUTO-WHATNOT:END -->

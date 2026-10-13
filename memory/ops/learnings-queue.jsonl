@@ -1,0 +1,1 @@
+{"skill": "create-ops", "date": "2026-10-09", "correction": "Al pegar un bloque con ssh nas + comandos + reboot, al cortarse SSH las lineas restantes se ejecutaron en el PC", "pattern": "Siempre dar los comandos de pasos con reinicio uno a uno y avisar de no pegar varias lineas tras ssh nas", "status": "pending"}
