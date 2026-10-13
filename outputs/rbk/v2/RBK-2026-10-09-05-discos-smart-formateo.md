@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 05 — Discos: revisión SMART y formateo |
-| **Versión** | 2.0 |
-| **Estado** | En revisión |
+| **Versión** | 2.1 |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
-| **Última modificación** | 2026-10-09 |
+| **Última modificación** | 2026-10-13 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Destructivo |
 | **Duración estimada** | 5 h (incluye los tests SMART largos) |
 
@@ -22,8 +22,8 @@ reservados, montado por separado (HLD §5, ADR-001, ADR-003).
 
 ## Prerrequisitos
 
-- [ ] RBK 04 completado: OMV en `http://nas.local:8000` y correo probado
-- [ ] Datos de los discos viejos copiados fuera (RBK 01): los pasos 9 y 10 los borran
+- [ ] RBK 04 completado (OPS-2026-10-09-rbk04 Aprobado): OMV en `http://192.168.1.11:8000` (no `nas.local`) y correo probado
+- [ ] Datos de los discos viejos: hallazgo 2026-10-13: los tres discos SATA (Toshiba `Y1NDFAQES`, WD `WD-WXU1EB6APMW5`, QVO `S5SVNG0N868475F`) contienen un pool ZFS antiguo «Photos» (`part1` `zfs_member`, `part9` de 8 MiB). El usuario confirmó por escrito (2026-10-13) que se puede borrar todo; los pasos 8b, 9 y 10 lo borran
 - [ ] Tabla Rol → modelo → serie del RBK 01 a mano
 - [ ] Sesión iniciada por el usuario en la web de OMV
 
@@ -170,6 +170,42 @@ Esperado: una línea por disco SATA con `-n standby` y los umbrales de temperatu
 
 Si falla: si falta `-n standby`, vuelve al paso 6: smartd despertaría los discos.
 
+### Paso 8b: Limpiar las firmas ZFS antiguas de los tres discos SATA
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | Destructivo |
+| **Ejecuta** | Usuario |
+| **Dónde** | NAS por SSH |
+| **HLD** | §5 |
+
+Comprobación previa (antes de cada disco):
+
+```bash
+ssh nas 'lsblk -o NAME,SIZE,MODEL,SERIAL'
+ssh nas 'sudo blkid -p /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES*'
+```
+
+Sustituye la ruta por la del disco que vas a limpiar. Compara el número de serie con el del paso 1 y confirma que `part1` es `zfs_member`. El disco `usb` (XG5) no se toca.
+
+Comando (un disco cada vez; una orden por línea, no pegues varias líneas a la vez):
+
+```bash
+ssh -t nas 'sudo wipefs -a /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES-part1 /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES-part9 && sudo wipefs -a /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES'
+```
+
+```bash
+ssh -t nas 'sudo wipefs -a /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5-part1 /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5-part9 && sudo wipefs -a /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5'
+```
+
+```bash
+ssh -t nas 'sudo wipefs -a /dev/disk/by-id/ata-Samsung_SSD_870_QVO_1TB_S5SVNG0N868475F-part1 /dev/disk/by-id/ata-Samsung_SSD_870_QVO_1TB_S5SVNG0N868475F-part9 && sudo wipefs -a /dev/disk/by-id/ata-Samsung_SSD_870_QVO_1TB_S5SVNG0N868475F'
+```
+
+Esperado: tras cada disco, `ssh nas 'sudo blkid -p /dev/disk/by-id/ata-<MODELO>_<SERIE>*'` no muestra `zfs_member` y `ssh nas 'lsblk -o NAME,SIZE,MODEL,SERIAL'` no muestra particiones bajo ese disco.
+
+Si falla: si `wipefs` informa «Device or resource busy», el pool está importado: comprueba `ssh nas 'findmnt | grep -i zfs'` y para; no fuerces. Si se limpió un disco que no es de la lista, para y no formatees nada.
+
 ### Paso 9: Borrar los tres discos SATA
 
 | Campo | Valor |
@@ -188,7 +224,7 @@ ssh nas 'ls -l /dev/disk/by-id/ | grep -v -- -part'
 
 Compara modelo y número de serie con los del paso 1 (no la letra `sdX`, que puede haber cambiado). El disco `usb` (XG5) no se toca.
 
-En OMV: Almacenamiento → Discos → cada disco SATA → Borrar → Rápido. Uno cada vez, leyendo el número de serie en la ventana antes de confirmar.
+Opcional / confirmación tras el paso 8b: si algún disco aún muestra particiones o firmas, en OMV: Almacenamiento → Discos → ese disco SATA → Borrar → Rápido. Uno cada vez, leyendo el número de serie en la ventana antes de confirmar.
 
 Esperado: los tres discos SATA sin particiones (`lsblk` no muestra particiones bajo ellos; `ls /dev/disk/by-id/` sin `-part1` para sus rutas ata-). El XG5 intacto.
 
@@ -275,7 +311,7 @@ Si falla: si se aplicó a una partición que no es de los tres discos SATA (por 
 
 ## Vuelta atrás
 
-Hasta el paso 8 no se ha borrado nada. Desde el paso 9 los discos están borrados: la vuelta
+Hasta el paso 8 no se ha borrado nada. Desde el paso 8b los discos están borrados: la vuelta
 atrás es restaurar los datos copiados en los prerrequisitos. El paso 12 se revierte con
 `sudo tune2fs -m 5` sobre el disco afectado.
 
@@ -298,3 +334,4 @@ atrás es restaurar los datos copiados en los prerrequisitos. El paso 12 se revi
 |---|---|---|---|
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: HLD v2 (2.0, Aprobado). Discos por `/dev/disk/by-id` en vez de `/dev/sdX` (pasos 1, 3, 4, 5, 9, 10, 11, verificación; ADR-022, OPS-2026-10-09-rbk01-03); paso 2 con los tamaños ya verificados (1000204886016 bytes) |
+| 2.1 | 2026-10-13 | Runbook Agent | Cambio menor (escenario C, en sitio): cita HLD v2 (2.1); prerrequisitos con OMV en `http://192.168.1.11:8000` y OPS-2026-10-09-rbk04 Aprobado; hallazgo del pool ZFS «Photos» en los tres discos SATA, borrado confirmado por el usuario; nuevo paso 8b (wipefs por by-id, Destructivo, Usuario); paso 9 pasa a opcional/confirmación. Aprobado (visto bueno del usuario, 2026-10-13) |
