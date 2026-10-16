@@ -1,0 +1,11 @@
+#!/bin/bash
+# Aplica el estado de Tailscale que toca según la hora local (HLD §4, ADR-010).
+# Conectado: L-V 11:30-14:30 y 18:00-23:00; sábado y domingo 08:00-23:00.
+dia=$(date +%u)
+hora=$((10#$(date +%H%M)))
+if [ "$dia" -le 5 ]; then
+  if { [ "$hora" -ge 1130 ] && [ "$hora" -lt 1430 ]; } || { [ "$hora" -ge 1800 ] && [ "$hora" -lt 2300 ]; }; then dentro=1; else dentro=0; fi
+else
+  if [ "$hora" -ge 800 ] && [ "$hora" -lt 2300 ]; then dentro=1; else dentro=0; fi
+fi
+if [ "$dentro" -eq 1 ]; then /usr/bin/tailscale up --hostname=nas; else /usr/bin/tailscale down; fi

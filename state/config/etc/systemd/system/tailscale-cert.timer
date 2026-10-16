@@ -1,0 +1,9 @@
+[Unit]
+Description=Renovacion semanal del certificado de Tailscale (sabado 12:00, dentro de la franja)
+
+[Timer]
+OnCalendar=Sat *-*-* 12:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+#!/bin/bash
+# Renueva el certificado de nas.<tailnet>.ts.net (HLD v3 ADR-024). Corre dentro de la franja con Tailscale activo.
+set -eu
+dominio=$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')
+tailscale cert --cert-file /etc/caddy/certs/nas.crt --key-file /etc/caddy/certs/nas.key "$dominio"
+chgrp caddy /etc/caddy/certs/nas.crt /etc/caddy/certs/nas.key
+chmod 640 /etc/caddy/certs/nas.crt /etc/caddy/certs/nas.key
+systemctl reload caddy

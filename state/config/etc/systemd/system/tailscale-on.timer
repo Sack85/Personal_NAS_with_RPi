@@ -1,0 +1,10 @@
+[Unit]
+Description=Tailscale up L-V 11:30 y 18:00, sábado y domingo 08:00
+
+[Timer]
+OnCalendar=Mon..Fri 11:30
+OnCalendar=Mon..Fri 18:00
+OnCalendar=Sat,Sun 08:00
+
+[Install]
+WantedBy=timers.target

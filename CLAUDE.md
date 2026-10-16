@@ -63,6 +63,8 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
 - `update-rbk` (2026-10-09): Siempre que un paso instale software que gestione sshd (OMV), añadir comprobación posterior con ssh -o BatchMode=yes nas hostname y sudo sshd -T | grep passwordauthentication
 - `update-rbk` (2026-10-13): Siempre configura los plugins de OMV con omv-rpc por SSH (Agente) y usa la ruta exacta del fichero tras listarlo, nunca un comodín
 - `update-rbk` (2026-10-13): Siempre que un paso de OMV se pueda hacer con omv-rpc, escríbelo como paso de Agente por SSH con la orden set exacta, el omv-salt deploy correspondiente y un getList que compruebe que no hay duplicados
+- `update-rbk` (2026-10-16): Siempre que un fichero se cree con ssh nas "printf ... | sudo tee", escapa $ como \$ y escribe #! como \041 con printf %b para que la shell del PC no lo expanda
+- `update-rbk` (2026-10-16): Siempre repite en script y servicio los mismos flags no por defecto usados en el primer tailscale up (--hostname=nas) y envía ficheros de configuración generados en el PC con cat fichero | ssh nas "sudo tee <ruta> >/dev/null" desde state/config/
 <!-- AUTO-LEARNINGS:END -->
 
 ## Qué no hacer

@@ -1,0 +1,11 @@
+[Unit]
+Description=Aplica el horario de Tailscale tras arrancar (HLD §4)
+After=tailscaled.service network-online.target
+Wants=tailscaled.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/tailscale-horario
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=Tailscale down (HLD §4, ADR-010)
+After=tailscaled.service
+Wants=tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/tailscale down

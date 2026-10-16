@@ -1,0 +1,9 @@
+[Unit]
+Description=Tailscale down L-V 14:30 y todos los días 23:00
+
+[Timer]
+OnCalendar=Mon..Fri 14:30
+OnCalendar=*-*-* 23:00
+
+[Install]
+WantedBy=timers.target

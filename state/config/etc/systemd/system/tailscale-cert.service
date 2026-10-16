@@ -1,0 +1,8 @@
+[Unit]
+Description=Renovar el certificado de Tailscale para Caddy
+After=tailscaled.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/tailscale-cert-renovar
