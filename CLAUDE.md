@@ -61,6 +61,8 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
 - `update-rbk` (2026-10-09): Siempre da los bloques de configuración con los valores ya puestos y añade un grep -c que compruebe que no quedan duplicados
 - `update-rbk` (2026-10-09): Siempre indica el puerto físico exacto (USB-A azul) y advierte de que el USB-C de la Pi 5 es solo de alimentación
 - `update-rbk` (2026-10-09): Siempre que un paso instale software que gestione sshd (OMV), añadir comprobación posterior con ssh -o BatchMode=yes nas hostname y sudo sshd -T | grep passwordauthentication
+- `update-rbk` (2026-10-13): Siempre configura los plugins de OMV con omv-rpc por SSH (Agente) y usa la ruta exacta del fichero tras listarlo, nunca un comodín
+- `update-rbk` (2026-10-13): Siempre que un paso de OMV se pueda hacer con omv-rpc, escríbelo como paso de Agente por SSH con la orden set exacta, el omv-salt deploy correspondiente y un getList que compruebe que no hay duplicados
 <!-- AUTO-LEARNINGS:END -->
 
 ## Qué no hacer

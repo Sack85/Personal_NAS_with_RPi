@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 09 — Spindown con hd-idle |
-| **Versión** | 2.0 |
-| **Estado** | En revisión |
+| **Versión** | 2.1 |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
-| **Última modificación** | 2026-10-09 |
+| **Última modificación** | 2026-10-14 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v2 (2.0, Aprobado) — HLD-2026-10-09-nas-familiar.md |
+| **Entregable previo** | HLD v2 (2.1, Aprobado) — HLD-2026-10-09-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 1 h + 45 min de espera + 24 h de seguimiento |
 
@@ -21,23 +21,29 @@ Parar los dos mecánicos (WD Blue y Toshiba MK1059) tras 45 minutos sin uso con 
 
 ## Prerrequisitos
 
-- [ ] RBK 08 completado
-- [ ] Sesión iniciada por el usuario en la web de OMV
+- [ ] RBK 08 ejecutado (el sync inicial de SnapRAID, unidad `snapraid-sync-inicial`, puede estar en curso: no impide instalar hd-idle)
+- [ ] Sin sesión web: todos los pasos los hace el Agente por SSH
 
 ## Pasos
 
-### Paso 1: Desactivar el spindown de OMV
+### Paso 1: Comprobar que OMV no gestiona spindown ni APM
 
 | Campo | Valor |
 |---|---|
-| **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Riesgo** | Lectura |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH |
 | **HLD** | §9 |
 
-Esperado: Almacenamiento → Discos → Editar en cada disco SATA: tiempo de spindown desactivado y APM sin tocar. Aplicado.
+Comando:
 
-Si falla: si un disco no deja editar, anótalo y sigue.
+```bash
+ssh nas 'sudo omv-confdbadm read conf.system.hdparm'
+```
+
+Esperado: `[]` (OMV sin spindown ni APM por disco; comprobado el 2026-10-14). Así hd-idle es el único que para los discos.
+
+Si falla: si sale algún objeto con `spindowntime` distinto de 0, para: ponerlo a 0 requiere un cambio aprobado (con `DiskMgmt setHdParm`, como en el paso 9) antes de seguir.
 
 ### Paso 2: Localizar los nombres estables
 
@@ -54,7 +60,7 @@ Comando:
 ssh nas 'ls -l /dev/disk/by-id/ | grep -v part'
 ```
 
-Esperado: una entrada `ata-WDC_…` y otra `ata-TOSHIBA_MK1059…` sin `-part`, con las series del RBK 05. Anota las dos rutas en el OPS.
+Esperado: entre otras, `ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5`, `ata-TOSHIBA_MK1059GSM_Y1NDFAQES` y `ata-Samsung_SSD_870_QVO_1TB_S5SVNG0N868475F` (el QVO no se para), con las series del RBK 05. Si una serie no coincide, para.
 
 Si falla: si no aparecen, comprueba los discos con `lsblk` (RBK 05 paso 1).
 
@@ -70,7 +76,7 @@ Si falla: si no aparecen, comprueba los discos con `lsblk` (RBK 05 paso 1).
 Comando:
 
 ```bash
-ssh nas "sudo smartctl -A /dev/disk/by-id/ata-TOSHIBA_MK1059XXXX | grep -E '^193 '"
+ssh nas "sudo smartctl -A /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES | grep -E '^193 '"
 ```
 
 Esperado: valor de `193 Load_Cycle_Count` del Toshiba anotado en el OPS con fecha y hora.
@@ -108,15 +114,16 @@ Si falla: si no está en el repositorio, para y prepara un UPD.
 Comando:
 
 ```bash
-ssh nas 'sudo tee /etc/default/hd-idle' <<'EOF'
-START_HD_IDLE=true
-HD_IDLE_OPTS="-i 0 -a /dev/disk/by-id/ata-WDC_XXXX -i 2700 -a /dev/disk/by-id/ata-TOSHIBA_MK1059XXXX -i 2700 -l /var/log/hd-idle.log"
-EOF
+ssh nas "printf 'START_HD_IDLE=true\nHD_IDLE_OPTS=\"-i 0 -a /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5 -i 2700 -a /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES -i 2700 -l /var/log/hd-idle.log\"\n' | sudo tee /etc/default/hd-idle"
 ```
 
-Sustituye `ata-WDC_XXXX` y `ata-TOSHIBA_MK1059XXXX` por los nombres del paso 2 antes de ejecutar.
+Una sola línea; no pegues varias líneas tras `ssh nas`. Comprobación de duplicados:
 
-Esperado: el fichero con `START_HD_IDLE=true` y las opciones del HLD con los dos nombres del paso 2.
+```bash
+ssh nas "grep -c '^HD_IDLE_OPTS=' /etc/default/hd-idle"
+```
+
+Esperado: el fichero con `START_HD_IDLE=true` y la línea `HD_IDLE_OPTS` con los dos by-id; el `grep -c` devuelve `1`.
 
 Si falla: si se equivoca un nombre, hd-idle no para ese disco: corrígelo y repite el paso 6.
 
@@ -139,7 +146,7 @@ Esperado: `hd-idle` `enabled` y `active`.
 
 Si falla: si no arranca, `ssh nas 'sudo journalctl -u hd-idle -n 30'`.
 
-### Paso 7: Comprobar el estado de los discos tras 45 minutos
+### Paso 7: Comprobar el estado de los discos tras el sync inicial y 45 minutos
 
 | Campo | Valor |
 |---|---|
@@ -151,10 +158,11 @@ Si falla: si no arranca, `ssh nas 'sudo journalctl -u hd-idle -n 30'`.
 Comando:
 
 ```bash
-ssh nas 'sudo hdparm -C /dev/disk/by-id/ata-WDC_XXXX /dev/disk/by-id/ata-TOSHIBA_MK1059XXXX; sudo tail -n 20 /var/log/hd-idle.log'
+ssh nas 'systemctl is-active snapraid-sync-inicial'
+ssh nas 'sudo hdparm -C /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5 /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES; sudo tail -n 20 /var/log/hd-idle.log'
 ```
 
-Esperado: tras 45 minutos sin uso, WD y Toshiba en `standby`; QVO en `active/idle`. `hdparm -C` no despierta discos.
+Esperado: primero, `snapraid-sync-inicial` ya no está `active` (mientras dure el sync inicial los discos no se paran: espera sin medir). Después, tras 45 minutos sin uso, WD y Toshiba en `standby`; QVO en `active/idle`. `hdparm -C` no despierta discos.
 
 Si falla: si un mecánico sigue `active/idle`, revisa en `/var/log/hd-idle.log` y con `sudo lsof +D /srv/mergerfs/pool` qué lo usa.
 
@@ -170,7 +178,7 @@ Si falla: si un mecánico sigue `active/idle`, revisa en `/var/log/hd-idle.log` 
 Comando:
 
 ```bash
-ssh nas "sudo smartctl -n standby -A /dev/disk/by-id/ata-TOSHIBA_MK1059XXXX | grep -E '^193 '"
+ssh nas "sudo smartctl -n standby -A /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES | grep -E '^193 '"
 ```
 
 Esperado: nuevo valor anotado; diferencia con el paso 3 en el OPS.
@@ -182,11 +190,24 @@ Si falla: si el disco está parado, espera a que despierte (23:30, sync) o léel
 | Campo | Valor |
 |---|---|
 | **Riesgo** | Cambio |
-| **Ejecuta** | Usuario |
-| **Dónde** | Web de OMV |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH |
 | **HLD** | §9, §12 |
 
-Esperado: solo si la diferencia del paso 8 es > 100: Almacenamiento → Discos → Editar Toshiba → APM 254. Si es ≤ 100, no se cambia y se anota «APM sin cambio».
+Solo si la diferencia del paso 8 es > 100 al día. Si es ≤ 100, no se cambia y se anota «APM sin cambio».
+
+Comando (una orden por línea; no pegues varias tras `ssh nas`):
+
+```bash
+ssh nas "sudo omv-rpc -u admin 'DiskMgmt' 'setHdParm' '{\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"devicefile\":\"/dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES\",\"apm\":254,\"aam\":0,\"spindowntime\":0,\"writecache\":true}'"
+ssh nas 'sudo omv-salt deploy run smartmontools'
+ssh nas "sudo omv-confdbadm read conf.system.hdparm | grep -o devicefile | wc -l"
+ssh nas "sudo hdparm -B /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES"
+```
+
+Fuente: `rpc.diskmgmt.sethdparm` en `/usr/share/openmediavault/datamodels/rpc.diskmgmt.json` (uuid nuevo = `OMV_CONFIGOBJECT_NEW_UUID` de `/etc/default/openmediavault`); OMV escribe `/etc/hdparm.conf` desde `deploy/smartmontools/20hdparm.sls`. `spindowntime` 0 deja el spindown a hd-idle. Alternativa si `omv-rpc` falla: `hdparm -B 254` persistente en `/etc/hdparm.conf`, solo con un cambio aprobado aparte.
+
+Esperado: un solo objeto en `conf.system.hdparm` (`1`) y `hdparm -B` → `APM_level = 254`.
 
 Si falla: si tras 7 días con APM 254 el 193 sigue subiendo > 100 al día, pásalo al experto en discos (`/storage-plugin:diagnose-disk`).
 
@@ -195,19 +216,20 @@ Si falla: si tras 7 días con APM 254 el 193 sigue subiendo > 100 al día, pása
 | Comprobación | Comando | Esperado |
 |---|---|---|
 | Servicio | `ssh nas systemctl is-active hd-idle` | active |
-| Mecánicos parados | `ssh nas 'sudo hdparm -C /dev/disk/by-id/ata-WDC_XXXX'` | standby (tras 45 min sin uso) |
+| Mecánicos parados | `ssh nas 'sudo hdparm -C /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5 /dev/disk/by-id/ata-TOSHIBA_MK1059GSM_Y1NDFAQES'` | standby (tras 45 min sin uso) |
 | QVO y XG5 no paran | `ssh nas "grep -c 'i 0' /etc/default/hd-idle"` | 1 |
+| Sin duplicados | `ssh nas "grep -c '^HD_IDLE_OPTS=' /etc/default/hd-idle"` | 1 |
 
 ## Vuelta atrás
 
 `ssh nas 'sudo systemctl disable --now hd-idle'` y, si se desea, volver a activar el spindown
-de OMV. APM vuelve a su valor anterior en Almacenamiento → Discos → Editar.
+de OMV. APM (si se aplicó el paso 9): repetir `DiskMgmt setHdParm` con el `uuid` del objeto creado (`omv-confdbadm read conf.system.hdparm`) y `apm` 255, y `omv-salt deploy run smartmontools`.
 
 ## Evidencias
 
 - Copia de `/etc/default/hd-idle` en `state/config/`
 - Atributo 193 a las 0 y 24 h en el OPS
-- Salida de `hdparm -C` en el OPS; captura 9.1
+- Salida de `hdparm -C` en el OPS; salida de `hdparm -B` si se aplica el paso 9
 
 ## Preguntas abiertas
 
@@ -219,3 +241,5 @@ Ninguna.
 |---|---|---|---|
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado); cita la nueva versión. Comprobado que identifica los discos por by-id o UUID, nunca por `/dev/sdX` (ADR-022) |
+| 2.1 | 2026-10-14 | Runbook Agent | Escenario C (cambio menor): cita HLD v2 (2.1); prerrequisito RBK 08 ejecutado (el sync inicial puede seguir en curso), sin sesión web; paso 1 pasa a Lectura del Agente (`conf.system.hdparm` = `[]`, comprobado 2026-10-14); by-id reales de WD y Toshiba (el QVO no se para); paso 5 en una línea con `printf` y `grep -c` de duplicados; paso 7 espera a que termine `snapraid-sync-inicial`; paso 9 por el Agente con `omv-rpc DiskMgmt setHdParm`, umbral > 100/día |
+| 2.1 | 2026-10-14 | Runbook Agent | Aprobado (visto bueno del usuario 2026-10-14) |
