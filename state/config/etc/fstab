@@ -3,6 +3,6 @@ PARTUUID=290350d4-01  /boot/firmware  vfat    defaults          0       2
 PARTUUID=290350d4-02  /               ext4    defaults,noatime  0       1
 # >>> [openmediavault]
 /dev/disk/by-uuid/a31e93cf-80b6-404a-84e3-535f60c44009		/srv/dev-disk-by-uuid-a31e93cf-80b6-404a-84e3-535f60c44009	ext4	defaults,nofail,user_xattr,usrquota,grpquota,acl	0 2
-/dev/disk/by-uuid/1d82d7b3-ca0f-460f-8356-23b5e46ecf79		/srv/dev-disk-by-uuid-1d82d7b3-ca0f-460f-8356-23b5e46ecf79	ext4	defaults,nofail,user_xattr,usrquota,grpquota,acl	0 2
 /dev/disk/by-uuid/56801884-fc00-4ec8-a648-6135b2047cde		/srv/dev-disk-by-uuid-56801884-fc00-4ec8-a648-6135b2047cde	ext4	defaults,nofail,user_xattr,usrquota,grpquota,acl	0 2
+/dev/disk/by-uuid/0b4a920a-b0d0-45c6-b73e-147686d5762f		/srv/dev-disk-by-uuid-0b4a920a-b0d0-45c6-b73e-147686d5762f	ext4	defaults,nofail,user_xattr,usrquota,grpquota,acl	0 2
 # <<< [openmediavault]
