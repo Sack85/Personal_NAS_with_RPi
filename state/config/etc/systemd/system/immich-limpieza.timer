@@ -1,0 +1,8 @@
+[Unit]
+Description=Limpieza de Immich a las 00:30 (HLD §7)
+
+[Timer]
+OnCalendar=*-*-* 00:30
+
+[Install]
+WantedBy=timers.target

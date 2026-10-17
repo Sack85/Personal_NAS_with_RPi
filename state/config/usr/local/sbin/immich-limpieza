@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""immich-limpieza: añade al álbum "Revisar" y archiva memes, comida y capturas.
+Nunca borra (HLD §6, ADR-013). Uso: immich-limpieza [--simular]"""
+
+# Fuente de verdad: state/config/usr/local/sbin/immich-limpieza (RBK 15 v3, paso 20).
+import json
+import sys
+import time
+import urllib.request
+
+URL = "http://localhost:2283/api"
+CLAVE = open("/etc/immich-limpieza/api.key").read().strip()
+CONSULTAS = ["meme", "plato de comida", "captura de pantalla"]
+MAX_POR_CONSULTA = 50  # se fija en el paso de calibración
+ALBUM = "Revisar"
+REGISTRO = "/var/log/immich-limpieza.log"
+SIMULAR = "--simular" in sys.argv
+
+
+def api(metodo, ruta, cuerpo=None):
+    if metodo == "DELETE":
+        raise SystemExit("immich-limpieza nunca borra")
+    datos = None if cuerpo is None else json.dumps(cuerpo).encode()
+    req = urllib.request.Request(
+        URL + ruta,
+        data=datos,
+        method=metodo,
+        headers={
+            "x-api-key": CLAVE,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=120) as r:
+        texto = r.read()
+    return json.loads(texto) if texto else None
+
+
+def candidatos():
+    ids = {}
+    for q in CONSULTAS:
+        r = api("POST", "/search/smart", {"query": q, "size": MAX_POR_CONSULTA, "page": 1})
+        for a in r["assets"]["items"]:
+            ids[a["id"]] = q
+    r = api("POST", "/search/metadata", {"originalFileName": "Screenshot", "size": 1000, "page": 1})
+    for a in r["assets"]["items"]:
+        ids[a["id"]] = "Screenshot"
+    return ids
+
+
+def album_revisar():
+    for a in api("GET", "/albums"):
+        if a["albumName"] == ALBUM:
+            return a["id"]
+    return api("POST", "/albums", {"albumName": ALBUM})["id"]
+
+
+def main():
+    ids = candidatos()
+    marca = time.strftime("%Y-%m-%d %H:%M:%S")
+    with open(REGISTRO, "a") as log:
+        for i, motivo in ids.items():
+            log.write(f"{marca}\t{'SIMULADO' if SIMULAR else 'ARCHIVADO'}\t{motivo}\t{i}\n")
+    print(f"{len(ids)} candidatos{' (simulación)' if SIMULAR else ''}")
+    if SIMULAR or not ids:
+        return
+    album = album_revisar()
+    lista = list(ids)
+    api("PUT", f"/albums/{album}/assets", {"ids": lista})
+    api("PUT", "/assets", {"ids": lista, "visibility": "archive"})
+
+
+if __name__ == "__main__":
+    main()

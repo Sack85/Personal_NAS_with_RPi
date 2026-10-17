@@ -1,0 +1,8 @@
+[Unit]
+Description=Limpieza de Immich: álbum Revisar + archivar, nunca borra (HLD §6, ADR-013)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/immich-limpieza
