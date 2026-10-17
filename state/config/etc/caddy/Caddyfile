@@ -1,0 +1,9 @@
+{
+	auto_https off
+}
+
+https://nas.tail5dac0f.ts.net:443 {
+	bind 192.168.1.11 100.116.191.116
+	tls /etc/caddy/certs/nas.crt /etc/caddy/certs/nas.key
+	reverse_proxy 127.0.0.1:11000
+}

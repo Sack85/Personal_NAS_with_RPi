@@ -5,7 +5,7 @@
 | **Documento** | RBK |
 | **Fase** | 10 — Nextcloud AIO |
 | **Versión** | 3.0 |
-| **Estado** | En revisión |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
 | **Última modificación** | 2026-10-16 |
 | **Autor** | Runbook Agent |
@@ -486,3 +486,4 @@ Si falla: si no conecta, revisa el paso 17 y que Caddy está `active`.
 | 1.0 | 2026-10-09 | Runbook Agent | Creación |
 | 2.0 | 2026-10-09 | Runbook Agent | Escenario A: revisado contra HLD v2 (2.0, Aprobado) |
 | 3.0 | 2026-10-16 | Runbook Agent | Escenario A por HLD v3 (3.0, Aprobado): deSEC sustituido por `nas.<tailnet>.ts.net` con `tailscale cert` y renovación semanal (ADR-024); Caddy en :443 con `ip_nonlocal_bind`; AIO en modo reverse proxy con `docker run` (11000 en 127.0.0.1, 8080 solo LAN); backup de AIO no configurado hasta tener paridad (ADR-027); fichero hosts en los PC (ADR-026); cuentas `carlos` y `sabrina`; ficheros enviados desde `state/config/` |
+| 3.0 | 2026-10-16 | Runbook Agent | Estado cambiado a Aprobado |
