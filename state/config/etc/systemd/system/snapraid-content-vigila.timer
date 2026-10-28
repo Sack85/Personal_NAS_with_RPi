@@ -1,0 +1,9 @@
+[Unit]
+Description=Vigilancia diaria del sync de SnapRAID a las 12:00 (RBK 16)
+
+[Timer]
+OnCalendar=*-*-* 12:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

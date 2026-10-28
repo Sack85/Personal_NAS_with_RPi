@@ -1,0 +1,6 @@
+[Unit]
+Description=Aviso si snapraid.content tiene más de 48 h (RBK 16, HLD §5)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/snapraid-content-vigila

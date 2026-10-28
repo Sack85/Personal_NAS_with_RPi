@@ -1,0 +1,24 @@
+#!/bin/sh
+# RBK 16 (resiliencia): avisa por correo si snapraid.content no se ha actualizado en 48 h.
+# Lee el content del SSD (/snapraid.content): no despierta los discos.
+# Uso: snapraid-content-vigila [--prueba]   (--prueba envía el correo aunque esté al día)
+set -eu
+F=/snapraid.content
+MAX=172800
+AHORA=$(date +%s)
+if [ -f "$F" ]; then
+  EDAD=$(( AHORA - $(stat -c %Y "$F") ))
+  ULTIMO=$(date -d "@$(stat -c %Y "$F")" '+%Y-%m-%d %H:%M')
+else
+  EDAD=999999999
+  ULTIMO="no existe"
+fi
+if [ "$EDAD" -gt "$MAX" ] || [ "${1:-}" = "--prueba" ]; then
+  HORAS=$(( EDAD / 3600 ))
+  printf 'snapraid.content no se ha actualizado desde %s (%s h).\nEl sync nocturno de SnapRAID (23:30) no ha corrido o ha fallado.\nRevisar: ssh nas "sudo snapraid status" y journalctl --list-boots (posible cuelgue).\n' "$ULTIMO" "$HORAS" \
+    | mail -s "[NAS] SnapRAID sin sync desde hace ${HORAS} h" root
+  logger -t snapraid-content-vigila "AVISO enviado: ultimo=$ULTIMO edad=${HORAS}h"
+else
+  logger -t snapraid-content-vigila "OK: ultimo=$ULTIMO"
+fi
+exit 0
