@@ -1,0 +1,76 @@
+# Primer inventario (tras el cuelgue del 21 al 28 de octubre y la imagen del SSD)
+fecha: "2026-10-28"
+sistema:
+  os: Debian GNU/Linux 13 (trixie)
+  kernel: 6.18.50+rpt-rpi-2712
+  firmware_eeprom: "actualización disponible (pospuesta: arranque USB con nospi10, ver OPS 04)"
+  uptime_dias: 0
+paquetes:
+  openmediavault: 8.5.11-1
+  openmediavault-snapraid: 8.0.3
+  openmediavault-mergerfs: 8.0.3
+  openmediavault-compose: 8.2.2
+  openmediavault-writecache: 8.3.0
+  openmediavault-omvextrasorg: 8.0.3
+  snapraid: "12.4"
+  mergerfs: 2.42.0
+  restic: "no instalado"
+  hd-idle: "no instalado"
+  docker-ce: 5:29.9.0
+  tailscale: 1.104.2
+  caddy: 2.6.2
+contenedores:
+  nextcloud-aio-mastercontainer: latest
+  immich-server: v3.3.3
+  immich-machine-learning: v3.3.3
+pendientes:
+  - {paquete: openmediavault, actual: 8.5.11-1, nueva: 8.6.0-1}
+  - {paquete: openmediavault-compose, actual: 8.2.2, nueva: 8.2.5}
+  - {paquete: openmediavault-cterm, actual: 8.0.4, nueva: 8.0.5}
+  - {paquete: openmediavault-mergerfs, actual: 8.0.3, nueva: 8.0.4}
+  - {paquete: openmediavault-omvextrasorg, actual: 8.0.3, nueva: 8.0.4}
+  - {paquete: openmediavault-writecache, actual: 8.3.0, nueva: 8.3.1}
+  - {paquete: docker-ce, actual: 5:29.9.0, nueva: 5:29.9.2}
+  - {paquete: containerd.io, actual: 2.4.1-2, nueva: 2.4.2-3}
+  - {paquete: docker-compose-plugin, actual: 5.6.0, nueva: 5.6.1}
+  - {paquete: tailscale, actual: 1.104.2, nueva: 1.104.4}
+  - {paquete: php8.4 (9 paquetes, seguridad), actual: 8.4.26, nueva: 8.4.27}
+  - {paquete: nginx, actual: 1.26.3-3+deb13u9, nueva: 1.26.3-3+deb13u10}
+  - {paquete: ca-certificates, actual: "20250419", nueva: 20250419+deb13u1}
+  - {paquete: libbrotli1, actual: 1.1.0-2+b7, nueva: 1.1.0-2+deb13u1}
+  - {paquete: tzdata, actual: 2026c, nueva: 2026e}
+  - {paquete: linux-base, actual: 4.12.1, nueva: 4.17~bpo13+1}
+  - {paquete: raspi-config, actual: "20261026", nueva: 20261026+2}
+  - {paquete: rpi-eeprom, actual: 28.33-1, nueva: 28.34-1}
+  - {paquete: rpi-connect-lite, actual: 2.13.0, nueva: 2.14.0}
+  - {paquete: rpicam-apps/libcamera, actual: 1.13.0, nueva: 1.14.0}
+  - {paquete: immich (contenedores), actual: v3.3.3, nueva: v3.3.5}
+salud:
+  pcie_enlace: 8GT/s x1
+  throttled: "0x0"
+  temp_cpu_c: 34.0
+  pool_uso_pct: 36
+  snapraid:
+    ultimo_sync: "2026-10-20 23:37 (sin sync del 21 al 28 por el cuelgue)"
+    errores: 0
+  backup_aio: "desactivado (ADR-027)"
+  restic_ultimo: "nunca"
+  discos:
+    - rol: paridad
+      modelo: ST2000LM007-1R8174
+      serie: WDZ03YJJ
+      temp_c: 26
+      smart: {5: 0, 187: 408, 193: 116617, 197: 0, 198: 0, 199: 0}
+    - rol: d1
+      modelo: WDC WD10JPVX-60JC3T1
+      serie: WD-WXU1EB6APMW5
+      temp_c: 26
+      smart: {5: 0, 193: 82140, 197: 0, 198: 0, 199: 0}
+    - rol: d2
+      modelo: Samsung SSD 870 QVO 1TB
+      serie: S5SVNG0N868475F
+      smart: {5: 0, 177: 97, 199: 0}
+    - rol: sistema
+      modelo: KXG50ZNV512G NVMe TOSHIBA (caja USB)
+      serie: 78EB616DKAWP
+      smart: {}
