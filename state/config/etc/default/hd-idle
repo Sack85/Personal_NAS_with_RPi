@@ -1,0 +1,2 @@
+START_HD_IDLE=true
+HD_IDLE_OPTS="-i 0 -a /dev/disk/by-id/ata-ST2000LM007-1R8174_WDZ03YJJ -i 2700 -a /dev/disk/by-id/ata-WDC_WD10JPVX-60JC3T1_WD-WXU1EB6APMW5 -i 2700 -l /var/log/hd-idle.log"
