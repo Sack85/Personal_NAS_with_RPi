@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | OPS |
-| **Versión** | 1.0 |
+| **Versión** | 1.1 |
 | **Estado** | Borrador |
 | **Fecha de creación** | 2026-10-29 |
 | **Última modificación** | 2026-10-29 |
@@ -48,8 +48,8 @@ recuperar la Pi si no arrancara. Además, el kernel no cambia.
 | 6. sshd, Tailscale y EEPROM antes del reinicio | Lectura | Agente | 2026-10-29 06:45 | OK | E5 |
 | 7. Subir Immich a v3.3.5 | Cambio | Agente | 2026-10-29 06:50 | OK | E6 |
 | 8. Nextcloud AIO (panel) | Cambio | Usuario | — | Pendiente | — |
-| 9. Reinicio | Cambio | Agente | — | Pendiente | — |
-| 10. Discos, PCIe y servicios tras el reinicio | Lectura | Agente | — | Pendiente | — |
+| 9. Reinicio | Cambio | Agente | 2026-10-29 21:43 | OK | E7 |
+| 10. Discos, PCIe y servicios tras el reinicio | Lectura | Agente | 2026-10-29 21:50 | OK | E7 |
 | 11. Inventario posterior y RBK 16 | Lectura | Agente | — | Pendiente | — |
 
 ## Evidencias
@@ -102,17 +102,26 @@ docker compose pull && up -d → /api/server/version {"major":3,"minor":3,"patch
 docker image prune -f
 ```
 
+### E7 — Pasos 9 y 10
+
+```
+systemctl reboot → ssh responde tras ~40 s; 11 contenedores healthy
+discos por by-id: WDZ03YJJ, WD-WXU1EB6APMW5, S5SVNG0N868475F; PCIe 8GT/s x1; pool montado
+sshd passwordauthentication no; tailscale nas; hd-idle, caddy, nginx active
+Immich 3.3.5; OMV :8000 → 200; 0 servicios fallidos (salvo quota, conocido)
+```
+
 ## Incidencias
 
 | # | Paso | Descripción | Acción |
 |---|---|---|---|
 | 1 | 5 | El UPD asigna el paso al usuario por la web de OMV; persona 1 lo delegó en el agente | `omv-upgrade` por SSH dentro de `systemd-run`, para que siguiera aunque se cortara la conexión |
 | 2 | 6 | Una comprobación usó el puerto 80 para la web de OMV, pero OMV escucha en el 8000 | No es un fallo: el puerto 80 está libre por Caddy. Corregir la comprobación en el UPD siguiente |
-| 3 | 9 | Reinicio aplazado | Se hará con persona 1 en casa, junto con el reinicio del RBK 16 |
+| 3 | 9 | Reinicio aplazado | Hecho el 2026-10-29 21:43 con persona 1 en casa, junto con el del RBK 16 |
 
 ## Estado final
 
-Pendiente: AIO (paso 8), reinicio y comprobaciones (pasos 9 y 10) e inventario posterior (paso 11).
+Sistema actualizado y reiniciado sin incidencias. Pendientes: foto de la configuración (paso 3), panel de AIO (paso 8, usuario) e inventario posterior (paso 11).
 
 ## Cambios en la configuración
 
@@ -123,3 +132,4 @@ Pendiente: AIO (paso 8), reinicio y comprobaciones (pasos 9 y 10) e inventario p
 | Versión | Fecha | Autor | Cambios |
 |---|---|---|---|
 | 1.0 | 2026-10-29 | Operator Agent | Registro de los pasos 1, 2 y 4 a 7; pasos 3 y 8 a 11 pendientes |
+| 1.1 | 2026-10-29 | Operator Agent | Pasos 9 y 10 hechos tras el reinicio |
