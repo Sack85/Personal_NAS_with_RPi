@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | OPS |
-| **Versión** | 1.1 |
+| **Versión** | 1.2 |
 | **Estado** | Borrador |
 | **Fecha de creación** | 2026-10-29 |
 | **Última modificación** | 2026-10-29 |
@@ -47,7 +47,7 @@ recuperar la Pi si no arrancara. Además, el kernel no cambia.
 | 5. Aplicar las actualizaciones de apt | Cambio | Agente | 2026-10-29 06:30 | OK | E4 |
 | 6. sshd, Tailscale y EEPROM antes del reinicio | Lectura | Agente | 2026-10-29 06:45 | OK | E5 |
 | 7. Subir Immich a v3.3.5 | Cambio | Agente | 2026-10-29 06:50 | OK | E6 |
-| 8. Nextcloud AIO (panel) | Cambio | Usuario | — | Pendiente | — |
+| 8. Nextcloud AIO (panel) | Cambio | Usuario | 2026-10-29 22:30 | OK | E8 |
 | 9. Reinicio | Cambio | Agente | 2026-10-29 21:43 | OK | E7 |
 | 10. Discos, PCIe y servicios tras el reinicio | Lectura | Agente | 2026-10-29 21:50 | OK | E7 |
 | 11. Inventario posterior y RBK 16 | Lectura | Agente | — | Pendiente | — |
@@ -111,6 +111,15 @@ sshd passwordauthentication no; tailscale nas; hd-idle, caddy, nginx active
 Immich 3.3.5; OMV :8000 → 200; 0 servicios fallidos (salvo quota, conocido)
 ```
 
+### E8 — Paso 8
+
+```
+El enlace desde Nextcloud no desbloqueó el panel: docker stop nextcloud-aio-apache (usuario) y acceso con la frase de AIO
+(leída por el usuario de configuration.json y guardada en su gestor de contraseñas)
+Stop containers → update mastercontainer → Start and update containers
+7 contenedores healthy; Nextcloud 34.0.4 → 34.0.5; imágenes all-in-one y aio-nextcloud iguales al registro
+```
+
 ## Incidencias
 
 | # | Paso | Descripción | Acción |
@@ -121,7 +130,7 @@ Immich 3.3.5; OMV :8000 → 200; 0 servicios fallidos (salvo quota, conocido)
 
 ## Estado final
 
-Sistema actualizado y reiniciado sin incidencias. Pendientes: foto de la configuración (paso 3), panel de AIO (paso 8, usuario) e inventario posterior (paso 11).
+Sistema actualizado y reiniciado sin incidencias. Pendientes: foto de la configuración (paso 3) e inventario posterior (paso 11).
 
 ## Cambios en la configuración
 
@@ -133,3 +142,4 @@ Sistema actualizado y reiniciado sin incidencias. Pendientes: foto de la configu
 |---|---|---|---|
 | 1.0 | 2026-10-29 | Operator Agent | Registro de los pasos 1, 2 y 4 a 7; pasos 3 y 8 a 11 pendientes |
 | 1.1 | 2026-10-29 | Operator Agent | Pasos 9 y 10 hechos tras el reinicio |
+| 1.2 | 2026-10-29 | Operator Agent | Paso 8: AIO actualizado por el usuario |
