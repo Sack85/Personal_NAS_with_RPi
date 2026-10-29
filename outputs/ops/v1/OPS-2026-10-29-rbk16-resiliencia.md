@@ -107,6 +107,15 @@ RuntimeWatchdogUSec=14s, RebootWatchdogUSec=2min; 0 servicios fallidos (aparte d
 
 ## Estado final
 
+| Comprobación | OK |
+|---|---|
+| El journal se conserva entre reinicios (`--list-boots` muestra el arranque anterior) | Sí |
+| `/var/log` directo en el SSD y uso ≤ 500M | Sí (72M) |
+| Watchdog hardware BCM2835, sin `softdog` | Sí |
+| `RuntimeWatchdogUSec=14s`, `RebootWatchdogUSec=2min` | Sí |
+| Temporizador `snapraid-content-vigila` activo | Sí |
+| Ningún servicio fallido nuevo | Sí |
+
 El journal se guarda en el SSD y se conserva entre reinicios (límite de 500M). El watchdog es el
 hardware BCM2835 (14 s; 2 min al reiniciar). Hay aviso diario a las 12:00 si `snapraid.content`
 pasa de 48 h sin actualizarse.
