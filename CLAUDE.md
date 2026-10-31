@@ -56,6 +56,7 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
 <!-- AUTO-LEARNINGS:START (managed by .claude/hooks/sync_learnings_to_claude_md.py — do not edit by hand) -->
 - `create-ops` (2026-10-09): Siempre dar los comandos de pasos con reinicio uno a uno y avisar de no pegar varias lineas tras ssh nas
 - `create-rbk` (2026-10-09): Siempre antes de un paso que reinstale o reconfigure el sistema añade un paso de imagen del SSD tras 'sudo poweroff' y una sección de recuperación sin pantalla; nunca desenchufar con el LED verde parpadeando
+- `create-rbk` (2026-10-28): Siempre comprueba en el NAS en solo lectura (/srv/salt/omv/deploy/<servicio>, /etc/default/openmediavault) qué componente de OMV genera un fichero antes de escribir un paso que lo cambie, y cámbialo por su variable o RPC de OMV, nunca editando el fichero generado
 - `update-hld` (2026-10-09): Siempre identificar discos por /dev/disk/by-id en el HLD y nunca por /dev/sdX
 - `update-nrd` (2026-10-08): Siempre usa Irreemplazable, Reemplazable o Mixta (con la parte entre paréntesis) en la columna Criticidad, y cifras numéricas en Crecimiento
 - `update-rbk` (2026-10-09): Siempre da los bloques de configuración con los valores ya puestos y añade un grep -c que compruebe que no quedan duplicados
@@ -65,6 +66,9 @@ Comandos: `/<plugin>:create-<abbr>`, `update-<abbr>`, `validate-<abbr>`, `approv
 - `update-rbk` (2026-10-13): Siempre que un paso de OMV se pueda hacer con omv-rpc, escríbelo como paso de Agente por SSH con la orden set exacta, el omv-salt deploy correspondiente y un getList que compruebe que no hay duplicados
 - `update-rbk` (2026-10-16): Siempre que un fichero se cree con ssh nas "printf ... | sudo tee", escapa $ como \$ y escribe #! como \041 con printf %b para que la shell del PC no lo expanda
 - `update-rbk` (2026-10-16): Siempre repite en script y servicio los mismos flags no por defecto usados en el primer tailscale up (--hostname=nas) y envía ficheros de configuración generados en el PC con cat fichero | ssh nas "sudo tee <ruta> >/dev/null" desde state/config/
+- `update-rbk` (2026-10-16): Siempre que un servicio escuche en la IP de Tailscale con el corte horario, añade net.ipv4.ip_nonlocal_bind=1 en /etc/sysctl.d/ y comprueba que arranca con tailscale down
+- `update-rbk` (2026-10-17): Siempre que un servicio Docker necesite un compose, guarda docker-compose.yml y un .env sin secretos en state/config/, envíalos con cat | ssh nas sudo tee, haz que el usuario añada la contraseña con ssh -t ... cat >> .env y comprueba con grep -c que hay una sola línea
+- `update-rbk` (2026-10-28): Siempre comprueba en el NAS (dpkg-query -W) que la herramienta de un comando de Lectura está instalada y, para estado de discos, usa smartctl -n standby -i/-g apm en vez de hdparm
 <!-- AUTO-LEARNINGS:END -->
 
 ## Qué no hacer
