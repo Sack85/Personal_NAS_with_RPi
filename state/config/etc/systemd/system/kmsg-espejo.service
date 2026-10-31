@@ -1,0 +1,24 @@
+# RBK 17: copia continua de los mensajes del kernel en el QVO (d2, SATA por PCIe, no se para).
+# Si el SSD del sistema (USB) deja de responder, el journal (en el SSD) no puede guardar nada,
+# pero este fichero sí: está en otro disco y dmesg ya está en memoria.
+# Ruta directa del QVO, nunca el pool de mergerfs. Excluida de SnapRAID (/.nas-kmsg/) y fuera
+# de las carpetas compartidas. Rotación: /etc/logrotate.d/kmsg-espejo (copytruncate).
+# dmesg -w vuelca el búfer del kernel al arrancar y después escribe cada línea al momento
+# (en modo follow usa salida por líneas). append: abre con O_APPEND: tras el truncado de
+# logrotate sigue escribiendo al principio del fichero, sin huecos.
+[Unit]
+Description=Espejo de los mensajes del kernel en el QVO (RBK 17)
+RequiresMountsFor=/srv/dev-disk-by-uuid-56801884-fc00-4ec8-a648-6135b2047cde/.nas-kmsg
+
+[Service]
+Type=simple
+UMask=0027
+ExecStartPre=/usr/bin/echo "=== kmsg-espejo: inicio, arranque %b ==="
+ExecStart=/usr/bin/dmesg -w --time-format iso
+StandardOutput=append:/srv/dev-disk-by-uuid-56801884-fc00-4ec8-a648-6135b2047cde/.nas-kmsg/kmsg.log
+StandardError=journal
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

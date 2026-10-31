@@ -1,0 +1,14 @@
+# RBK 17: rotación del espejo de mensajes del kernel (servicio kmsg-espejo) en el QVO.
+# copytruncate porque dmesg mantiene el fichero abierto (StandardOutput=append:).
+# Tope: el fichero actual (rota cada semana, o antes si pasa de 10 MB en la pasada diaria
+# de logrotate.timer) + 8 copias; kmsg.log.1 queda sin comprimir para leerlo tras un cuelgue.
+/srv/dev-disk-by-uuid-56801884-fc00-4ec8-a648-6135b2047cde/.nas-kmsg/kmsg.log {
+	weekly
+	maxsize 10M
+	rotate 8
+	copytruncate
+	compress
+	delaycompress
+	missingok
+	notifempty
+}
