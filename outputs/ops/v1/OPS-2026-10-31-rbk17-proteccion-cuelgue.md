@@ -3,10 +3,10 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | OPS |
-| **Versión** | 1.1 |
+| **Versión** | 1.2 |
 | **Estado** | Borrador |
 | **Fecha de creación** | 2026-10-31 |
-| **Última modificación** | 2026-10-31 |
+| **Última modificación** | 2026-11-02 |
 | **Autor** | Operator Agent |
 | **Entregable previo** | RBK v3 (3.1, Aprobado) — RBK-2026-10-31-17-proteccion-cuelgue-disco-sistema.md |
 | **Resultado** | En curso |
@@ -169,6 +169,18 @@ Ficha consultada en fichas de tienda: «UGREEN UG-10902 USB-C Female to M.2 M-Ke
 C cable 50cm» (https://www.proftech.co.ke/ugreen-ug-10902-usb-c-female-to-m-2-m-key-10g-enclosure-c-to-c-cable-50cm)
 y «UGREEN USB-C Female to M.2 M-Key 10G Enclosure (UG-10902/CM400)» (https://rapidtech.co.ke/?p=53121).
 
+### E12 — Segundo reinicio no planificado (2026-11-01 18:09)
+
+```
+journalctl --list-boots: -1 2026-10-31 15:00:46 → 2026-11-01 18:09:20; 0 desde 2026-11-01 18:15:31
+journalctl -b -1 -n 25: última entrada 18:09:20 (apt-daily-upgrade, rutina); sin secuencia de apagado
+kmsg.log, líneas por hora: 2026-10-30T15 927, 2026-10-31T06 8, 2026-10-31T15 897, 2026-11-01T18 921
+  → ninguna entre el arranque del 2026-10-31 a las 15:00 y el del 2026-11-01 a las 18:15
+vcgencmd get_rsts → 20
+2026-11-02 06:18: up 12 h; 11 contenedores healthy; fallidos solo quotaon@ y systemd-quotacheck@; Ugreen Storage Device 480M
+persona 1 (2026-11-02): nadie tocó la caja, el cable ni el adaptador
+```
+
 ## Incidencias
 
 | # | Paso | Descripción | Acción |
@@ -177,10 +189,11 @@ y «UGREEN USB-C Female to M.2 M-Key 10G Enclosure (UG-10902/CM400)» (https://r
 | 2 | — | Reinicio no planificado el 2026-10-31 entre las 14:58:24 (última entrada del journal) y las 15:00:34 (arranque del kernel). El NAS volvió solo (journal desde las 15:00:46) y a las 15:53 todos los servicios y contenedores estaban en marcha (E9). No fue un apagado limpio ni un corte de luz: no hay secuencia de apagado, se recuperaron los journals de ext4, la FAT tenía el dirty bit, `rsts` vale 0x20 (watchdog) y `power_reset` 0. Como en el cuelgue del 2026-10-30, no hay ningún mensaje del kernel: ni el journal ni el espejo tienen nada desde las 06:47:06. La raíz no registró errores (`clean` tras recuperar el journal) | Causa sin determinar: un panic del RBK 17 (su mensaje se pierde, pregunta 3 del RBK) y el watchdog hardware del RBK 16 (14 s) dejan el mismo `rsts`. Las protecciones funcionaron: el NAS volvió solo y con los ajustes del RBK 17 (paso 10, E8). Para el arquitecto (`/architect-plugin:update-hld`), preguntas 2 y 3 del RBK: con `ramoops-pi5` y `systemd-pstore`, un panic dejaría su mensaje y se distinguiría del watchdog. Si se repite: «Tras un cuelgue» del RBK. 2026-11-01: persona 1 confirma que movió la caja y el adaptador hacia las 15:00 para fotografiar la etiqueta: causa probable, desconexión del SSD por el contacto del adaptador; no se toca la caja con el NAS encendido hasta el paso 9 |
 | 3 | 9 | Corrige la incidencia 1. La caja es una Ugreen CM400 (P/N 10902, en la etiqueta) con conector USB-C hembra y un cable USB-C ↔ USB-C de 50 cm desmontable (ficha, E11). El cable no va integrado: el montaje es caja → cable C-C → adaptador USB-C hembra → USB-A macho → puerto azul. El SSD lee a 40,5 MB/s, el techo de USB 2, y ningún puerto USB 3 ve la caja (`RxDetect`, E10). Por USB-C directo al PC leía ~250-260 MB/s, así que el límite está en el adaptador, como ya concluyó el diagnóstico del RBK 17 | Vale el paso 9 aprobado tal cual: un cable USB-C macho → USB-A macho USB 3.2 Gen 2, directo y sin adaptador (sustituye a la acción de la incidencia 1). Conservar el cable C-C y cambiar solo el adaptador por uno USB 3 sería una desviación del RBK: antes, `/runbook-plugin:update-rbk` y aprobarlo |
 | 4 | 10 | El recuento de unidades fallidas sin `quotaon` del paso 10 da `3`, no `0`. Además de los tres `quotaon@` fallan los tres `systemd-quotacheck@` de los discos SATA («Cannot find filesystem to check or filesystem not mounted with quota option»). Solo se lanzan cuando un fsck corrige algo al arrancar (existe `/run/systemd/quotacheck`, de las 15:00); aquí fue el dirty bit de la FAT de arranque tras el reinicio sucio. Pasó igual en el arranque sucio del 2026-10-30 a las 15:23 (3) y no en el limpio de las 15:43 (0) | Anotado según el «Si falla» del paso 10; el resto del paso coincide (E8). Es un fallo conocido desde el 2026-10-09 e inofensivo (`memory/dcp/session-2026-10-15.md`). Para el RBK (`/runbook-plugin:update-rbk`): excluir también `quotacheck` en ese `grep -v -c` |
+| 5 | — | Segundo reinicio no planificado, el 2026-11-01 entre las 18:09:20 (última entrada del journal, en mitad de tareas rutinarias) y las 18:15:18 (arranque del kernel). Persona 1 confirma que nadie tocó la caja, el cable ni el adaptador. Mismas señales que la incidencia 2: sin apagado limpio, `rsts` 0x20 y nada en el espejo del kernel desde el arranque del 2026-10-31 a las 15:00 (E12). El NAS volvió solo; el 2026-11-02 a las 06:18 tenía los 11 contenedores healthy y solo quota fallando | Causa sin determinar. Sospecha principal: el enlace del SSD por el adaptador USB 2, esta vez sin manipulación; el cable del paso 9 lo resuelve o lo descarta. En los tres reinicios (2026-10-30, 2026-10-31 y 2026-11-01) el espejo no ha registrado nada, así que no sirve de caja negra: refuerza la pregunta 3 del RBK (`ramoops-pi5` + `systemd-pstore`) para `/architect-plugin:update-hld` |
 
 ## Estado final
 
-Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 están activos: el espejo de mensajes del kernel en el QVO, el reinicio automático ante tareas bloqueadas (120 s + 10 s) y el panic ante errores en la raíz. Tras el reinicio no planificado del 2026-10-31 (incidencia 2), los tres siguen activos (paso 10, E8). El SSD sigue a 480M, con 40,5 MB/s de lectura (E10).
+Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 están activos: el espejo de mensajes del kernel en el QVO, el reinicio automático ante tareas bloqueadas (120 s + 10 s) y el panic ante errores en la raíz. Tras el reinicio no planificado del 2026-10-31 (incidencia 2), los tres siguen activos (paso 10, E8). Hubo un segundo reinicio no planificado el 2026-11-01 a las 18:09, sin intervención (incidencia 5). El SSD sigue a 480M, con 40,5 MB/s de lectura (E10).
 
 ## Cambios en la configuración
 
@@ -195,3 +208,4 @@ Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 es
 |---|---|---|---|
 | 1.0 | 2026-10-31 | Operator Agent | Pasos 1 a 8 en caliente; 9 a 11 pendientes del adaptador |
 | 1.1 | 2026-10-31 | Operator Agent | Reanudada en el paso 10, tras el reinicio no planificado del 2026-10-31 (~15:00): paso 10 OK (E8). Evidencias E9 a E11 (reinicio; enlace USB 2 a 40,5 MB/s con los puertos USB 3 en `RxDetect`; caja Ugreen CM400 10902) e incidencias 2 a 4 (reinicio; cable desmontable, que corrige la 1; quotacheck). Nota añadida al Alcance. Pasos 9 y 11 pendientes del cable |
+| 1.2 | 2026-11-02 | Operator Agent | Evidencia E12 e incidencia 5: segundo reinicio no planificado (2026-11-01 18:09), sin intervención y sin nada en el espejo del kernel |
