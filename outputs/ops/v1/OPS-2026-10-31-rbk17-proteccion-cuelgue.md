@@ -3,10 +3,10 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | OPS |
-| **Versión** | 1.2 |
+| **Versión** | 1.3 |
 | **Estado** | Borrador |
 | **Fecha de creación** | 2026-10-31 |
-| **Última modificación** | 2026-11-02 |
+| **Última modificación** | 2026-11-04 |
 | **Autor** | Operator Agent |
 | **Entregable previo** | RBK v3 (3.1, Aprobado) — RBK-2026-10-31-17-proteccion-cuelgue-disco-sistema.md |
 | **Resultado** | En curso |
@@ -181,6 +181,16 @@ vcgencmd get_rsts → 20
 persona 1 (2026-11-02): nadie tocó la caja, el cable ni el adaptador
 ```
 
+### E13 — Tercer reinicio no planificado (2026-11-04 07:58)
+
+```
+journalctl --list-boots: -1 2026-11-01 18:15:31 → 2026-11-04 07:58:51; 0 desde 2026-11-04 08:01:09
+journalctl -b -1 -n 6: última entrada 07:58:51 (tailscaled, health no-derp-connection: ruido habitual); sin secuencia de apagado
+vcgencmd get_rsts → 20
+kmsg.log: 927 líneas del arranque de las 08:01 y ninguna anterior (el espejo sigue sin registrar el momento del corte)
+2026-11-04 22:13: up 14 h; contenedores todos healthy; fallidos solo quotaon@ y systemd-quotacheck@
+```
+
 ## Incidencias
 
 | # | Paso | Descripción | Acción |
@@ -190,10 +200,11 @@ persona 1 (2026-11-02): nadie tocó la caja, el cable ni el adaptador
 | 3 | 9 | Corrige la incidencia 1. La caja es una Ugreen CM400 (P/N 10902, en la etiqueta) con conector USB-C hembra y un cable USB-C ↔ USB-C de 50 cm desmontable (ficha, E11). El cable no va integrado: el montaje es caja → cable C-C → adaptador USB-C hembra → USB-A macho → puerto azul. El SSD lee a 40,5 MB/s, el techo de USB 2, y ningún puerto USB 3 ve la caja (`RxDetect`, E10). Por USB-C directo al PC leía ~250-260 MB/s, así que el límite está en el adaptador, como ya concluyó el diagnóstico del RBK 17 | Vale el paso 9 aprobado tal cual: un cable USB-C macho → USB-A macho USB 3.2 Gen 2, directo y sin adaptador (sustituye a la acción de la incidencia 1). Conservar el cable C-C y cambiar solo el adaptador por uno USB 3 sería una desviación del RBK: antes, `/runbook-plugin:update-rbk` y aprobarlo |
 | 4 | 10 | El recuento de unidades fallidas sin `quotaon` del paso 10 da `3`, no `0`. Además de los tres `quotaon@` fallan los tres `systemd-quotacheck@` de los discos SATA («Cannot find filesystem to check or filesystem not mounted with quota option»). Solo se lanzan cuando un fsck corrige algo al arrancar (existe `/run/systemd/quotacheck`, de las 15:00); aquí fue el dirty bit de la FAT de arranque tras el reinicio sucio. Pasó igual en el arranque sucio del 2026-10-30 a las 15:23 (3) y no en el limpio de las 15:43 (0) | Anotado según el «Si falla» del paso 10; el resto del paso coincide (E8). Es un fallo conocido desde el 2026-10-09 e inofensivo (`memory/dcp/session-2026-10-15.md`). Para el RBK (`/runbook-plugin:update-rbk`): excluir también `quotacheck` en ese `grep -v -c` |
 | 5 | — | Segundo reinicio no planificado, el 2026-11-01 entre las 18:09:20 (última entrada del journal, en mitad de tareas rutinarias) y las 18:15:18 (arranque del kernel). Persona 1 confirma que nadie tocó la caja, el cable ni el adaptador. Mismas señales que la incidencia 2: sin apagado limpio, `rsts` 0x20 y nada en el espejo del kernel desde el arranque del 2026-10-31 a las 15:00 (E12). El NAS volvió solo; el 2026-11-02 a las 06:18 tenía los 11 contenedores healthy y solo quota fallando | Causa sin determinar. Sospecha principal: el enlace del SSD por el adaptador USB 2, esta vez sin manipulación; el cable del paso 9 lo resuelve o lo descarta. En los tres reinicios (2026-10-30, 2026-10-31 y 2026-11-01) el espejo no ha registrado nada, así que no sirve de caja negra: refuerza la pregunta 3 del RBK (`ramoops-pi5` + `systemd-pstore`) para `/architect-plugin:update-hld` |
+| 6 | — | Tercer reinicio no planificado desde el RBK 17, el 2026-11-04 entre las 07:58:51 (última entrada del journal) y las 08:01:09 (arranque). Sin intervención conocida, sin apagado limpio, `rsts` 0x20 y nada en el espejo del kernel (E13). Intervalo entre reinicios sin manipulación: 2026-11-01 18:09 → 2026-11-04 07:58 (2 d 13 h) | Causa sin determinar. El patrón (cortes bruscos sin mensaje, `rsts` 0x20, SSD a 480M por un adaptador USB 2) apunta al enlace del SSD o al watchdog; el cable del paso 9 es la prueba que falta. Para `/architect-plugin:update-hld`: sin `ramoops-pi5` + `systemd-pstore` no se distinguirá un panic del watchdog |
 
 ## Estado final
 
-Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 están activos: el espejo de mensajes del kernel en el QVO, el reinicio automático ante tareas bloqueadas (120 s + 10 s) y el panic ante errores en la raíz. Tras el reinicio no planificado del 2026-10-31 (incidencia 2), los tres siguen activos (paso 10, E8). Hubo un segundo reinicio no planificado el 2026-11-01 a las 18:09, sin intervención (incidencia 5). El SSD sigue a 480M, con 40,5 MB/s de lectura (E10).
+Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 están activos: el espejo de mensajes del kernel en el QVO, el reinicio automático ante tareas bloqueadas (120 s + 10 s) y el panic ante errores en la raíz. Tras el reinicio no planificado del 2026-10-31 (incidencia 2), los tres siguen activos (paso 10, E8). Hubo un segundo reinicio no planificado el 2026-11-01 a las 18:09, sin intervención (incidencia 5), y un tercero el 2026-11-04 a las 07:58 (incidencia 6). El SSD sigue a 480M, con 40,5 MB/s de lectura (E10).
 
 ## Cambios en la configuración
 
@@ -209,3 +220,4 @@ Pendiente de los pasos 9 y 11: el cable USB 3 (incidencia 3). Desde las 06:51 es
 | 1.0 | 2026-10-31 | Operator Agent | Pasos 1 a 8 en caliente; 9 a 11 pendientes del adaptador |
 | 1.1 | 2026-10-31 | Operator Agent | Reanudada en el paso 10, tras el reinicio no planificado del 2026-10-31 (~15:00): paso 10 OK (E8). Evidencias E9 a E11 (reinicio; enlace USB 2 a 40,5 MB/s con los puertos USB 3 en `RxDetect`; caja Ugreen CM400 10902) e incidencias 2 a 4 (reinicio; cable desmontable, que corrige la 1; quotacheck). Nota añadida al Alcance. Pasos 9 y 11 pendientes del cable |
 | 1.2 | 2026-11-02 | Operator Agent | Evidencia E12 e incidencia 5: segundo reinicio no planificado (2026-11-01 18:09), sin intervención y sin nada en el espejo del kernel |
+| 1.3 | 2026-11-04 | Operator Agent | Evidencia E13 e incidencia 6: tercer reinicio no planificado (2026-11-04 07:58), mismas señales |
