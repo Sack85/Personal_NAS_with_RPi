@@ -1,0 +1,20 @@
+#!/bin/bash
+# RBK 18: sustituto de mail para omv-snapraid-diff. Descarta solo el informe
+# "Sync/Scrub Job COMPLETED" cuando es limpio (hay "Everything OK" y ninguna linea
+# WARNING/DANGER ni contadores de errores distintos de 0). Todo lo demas (umbrales,
+# disco ausente, errores) va al mail real con los mismos argumentos.
+asunto=""
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+  [ "${args[i]}" = "-s" ] && asunto="${args[i+1]}"
+done
+cuerpo=$(mktemp) || exit 1
+trap 'rm -f "$cuerpo"' EXIT
+cat > "$cuerpo"
+if [[ "$asunto" == *"Sync/Scrub Job COMPLETED" ]] \
+  && grep -q 'Everything OK' "$cuerpo" \
+  && ! grep -Eq '^(WARNING|DANGER)|^ *[1-9][0-9]* (file |io |data )?errors' "$cuerpo"; then
+  logger -t snapraid-aviso "Informe de exito no enviado: $asunto"
+  exit 0
+fi
+/usr/bin/mail "$@" < "$cuerpo"

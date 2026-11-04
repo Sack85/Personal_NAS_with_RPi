@@ -1,0 +1,4 @@
+#!/bin/bash
+# RBK 18: lanza omv-snapraid-diff con un "mail" propio delante en el PATH que descarta
+# el informe de éxito (Sync/Scrub Job COMPLETED). Los avisos de fallo pasan al mail real.
+PATH=/usr/local/lib/snapraid-aviso:$PATH exec /usr/sbin/omv-snapraid-diff
