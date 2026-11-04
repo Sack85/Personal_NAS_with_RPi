@@ -5,7 +5,7 @@
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
 | **Versión** | 1.0 |
-| **Estado** | Borrador |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
 | **Última modificación** | 2026-11-04 |
 | **Autor** | Runbook Agent |
@@ -274,3 +274,4 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | Versión | Fecha | Autor | Cambio |
 |---|---|---|---|
 | 1.0 | 2026-11-04 | Runbook Agent | Creación: `-I 7` en smartd, informe de SnapRAID solo ante fallo, fin del aviso diario de actualizaciones |
+| 1.0 | 2026-11-04 | Runbook Agent | Estado cambiado a Aprobado |
