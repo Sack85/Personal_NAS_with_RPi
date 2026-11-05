@@ -4,10 +4,10 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
-| **Versión** | 1.0 |
+| **Versión** | 1.1 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
-| **Última modificación** | 2026-11-04 |
+| **Última modificación** | 2026-11-05 |
 | **Autor** | Runbook Agent |
 | **Entregable previo** | HLD v3 (3.0, Aprobado) — HLD-2026-10-16-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
@@ -76,14 +76,18 @@ Comprobación previa: paso 1 (la variable no tiene valor).
 Comando (una orden por línea):
 
 ```bash
-ssh -t nas "sudo omv-env set OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES '-a -o on -S on -T permissive -R 5! -R 197! -U 198+ -I 7'"
+ssh -t nas "sudo omv-env set -- OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES '-a -o on -S on -T permissive -R 5! -R 197! -U 198+ -I 7'"
+```
+
+```bash
+ssh nas 'sudo omv-env get --value-only OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'
 ```
 
 ```bash
 ssh -t nas "sudo omv-salt deploy run smartmontools"
 ```
 
-Esperado: el segundo termina sin `Failed` en el resumen de salt. Reinicia `smartd` pero no despierta discos (`-n standby,q` sigue en la línea `DEFAULT`).
+Nota: `omv-env set` usa click y trata un valor que empieza por `-` como opción (`No such option: -a`, OPS 2026-11-05 paso 2); el `--` antes de la clave termina las opciones. Probado en solo lectura en el NAS con el mismo click 8.1.8 y los mismos argumentos (`['--','K','-a -o on -I 7']` da `('K','-a -o on -I 7')`). Esperado: el `get` devuelve `-a -o on -S on -T permissive -R 5! -R 197! -U 198+ -I 7`; el `omv-salt` termina sin `Failed` en el resumen de salt. Reinicia `smartd` pero no despierta discos (`-n standby,q` sigue en la línea `DEFAULT`).
 
 Si falla: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'` y repite el `omv-salt deploy run smartmontools`; vuelve al valor por defecto de la plantilla.
 
@@ -275,3 +279,5 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 |---|---|---|---|
 | 1.0 | 2026-11-04 | Runbook Agent | Creación: `-I 7` en smartd, informe de SnapRAID solo ante fallo, fin del aviso diario de actualizaciones |
 | 1.0 | 2026-11-04 | Runbook Agent | Estado cambiado a Aprobado |
+| 1.1 | 2026-11-05 | Runbook Agent | Paso 2: `omv-env set -- CLAVE VALOR` (el valor empieza por `-`) y `get` de comprobación; incidencia del OPS-2026-11-05-rbk18-ruido-correos paso 2. Estado En revisión |
+| 1.1 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
