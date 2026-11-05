@@ -4,7 +4,7 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
-| **Versión** | 1.1 |
+| **Versión** | 1.2 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
 | **Última modificación** | 2026-11-05 |
@@ -25,7 +25,7 @@ Qué genera cada correo (comprobado en el NAS en solo lectura el 2026-11-04):
 
 | Correo | Lo genera | Cómo se cambia aquí |
 |---|---|---|
-| Cambios del atributo 7 | `smartd`, con `/etc/smartd.conf` creado por el estado salt `omv/deploy/smartmontools` (plantilla `etc-smartd_conf.j2`, línea `DEFAULT`, que lee `default:OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES`; hoy sin fijar, vale `-a -o on -S on -T permissive -R 5! -R 197! -U 198+`) | `omv-env set OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES …` + `omv-salt deploy run smartmontools`. `-I 7` solo actúa junto a `-p/-u/-t`, que ya trae `-a` (`man smartd.conf`) |
+| Cambios del atributo 7 | `smartd`, con `/etc/smartd.conf` creado por el estado salt `omv/deploy/smartmontools` (plantilla `etc-smartd_conf.j2`, línea `DEFAULT`, que lee `default:OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES`; hoy sin fijar, vale `-a -o on -S on -T permissive -R 5! -R 197! -U 198+`) | `omv-env set OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES …` + `omv-salt stage run prepare` + `omv-salt deploy run smartmontools`. `-I 7` solo actúa junto a `-p/-u/-t`, que ya trae `-a` (`man smartd.conf`) |
 | Sync/Scrub COMPLETED | `/usr/sbin/omv-snapraid-diff` (paquete `openmediavault-snapraid` 8.0.3), función `_send_email` con `mail`; ajuste OMV `conf.service.snapraid.sendmail` = true. El mismo ajuste manda también los avisos de umbral (50 borrados) y de disco ausente, así que apagarlo los perdería | Un `mail` propio (`/usr/local/lib/snapraid-aviso/mail`) delante en el PATH, lanzado por un envoltorio (`/usr/local/sbin/snapraid-diff-solo-fallos`) que pasa a ser el comando de la tarea Cron de OMV. No se toca el script del paquete ni el ajuste `sendmail` |
 | Cron - SnapRAID diff+sync diario | Tarea Cron de OMV `1e921904-…` (`sendemail` true, `mail -E`): solo manda si la tarea imprime algo | Se deja como está (es aviso de fallo) |
 | N package update(s) available | `apticron` desde `/etc/cron.daily/openmediavault-apticron`; lo crea `omv/deploy/apticron/20cron.sls` solo si la notificación `apt` de OMV está activa (`conf.system.notification.notification`, uuid `5334afb5-…`) | `omv-rpc Notification set` con `enable` false + `omv-salt deploy run apticron apt` |
@@ -71,7 +71,7 @@ Si falla: si la variable ya tiene valor o el comando de la tarea es otro, para y
 | **Dónde** | NAS por SSH |
 | **HLD** | §9 |
 
-Comprobación previa: paso 1 (la variable no tiene valor).
+Comprobación previa: paso 1 (la variable no tiene valor, o ya tiene el valor de este paso si se reanuda tras la incidencia del OPS; el `set` es idempotente).
 
 Comando (una orden por línea):
 
@@ -84,12 +84,20 @@ ssh nas 'sudo omv-env get --value-only OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'
 ```
 
 ```bash
+ssh -t nas "sudo omv-salt stage run prepare"
+```
+
+```bash
+ssh nas 'grep -c OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES /srv/pillar/omv/default.sls'
+```
+
+```bash
 ssh -t nas "sudo omv-salt deploy run smartmontools"
 ```
 
-Nota: `omv-env set` usa click y trata un valor que empieza por `-` como opción (`No such option: -a`, OPS 2026-11-05 paso 2); el `--` antes de la clave termina las opciones. Probado en solo lectura en el NAS con el mismo click 8.1.8 y los mismos argumentos (`['--','K','-a -o on -I 7']` da `('K','-a -o on -I 7')`). Esperado: el `get` devuelve `-a -o on -S on -T permissive -R 5! -R 197! -U 198+ -I 7`; el `omv-salt` termina sin `Failed` en el resumen de salt. Reinicia `smartd` pero no despierta discos (`-n standby,q` sigue en la línea `DEFAULT`).
+Nota: el pillar de OMV (`/srv/pillar/omv/default.sls`) se genera con `stage run prepare`; sin él el deploy no ve la variable nueva (OPS 2026-11-05 pasos 2/3; mismo caso que la incidencia 1 de OPS-2026-10-29-rbk16-resiliencia). El `grep -c` debe dar `1` antes del deploy; si da `0`, repite el `prepare` y no sigas. `omv-env set` usa click y trata un valor que empieza por `-` como opción (`No such option: -a`, OPS 2026-11-05 paso 2); el `--` antes de la clave termina las opciones. Probado en solo lectura en el NAS con el mismo click 8.1.8 y los mismos argumentos (`['--','K','-a -o on -I 7']` da `('K','-a -o on -I 7')`). Esperado: el `get` devuelve `-a -o on -S on -T permissive -R 5! -R 197! -U 198+ -I 7`; el `prepare` y el `omv-salt` terminan sin `Failed` en el resumen de salt. Reinicia `smartd` pero no despierta discos (`-n standby,q` sigue en la línea `DEFAULT`).
 
-Si falla: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'` y repite el `omv-salt deploy run smartmontools`; vuelve al valor por defecto de la plantilla.
+Si falla: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'` y repite `omv-salt stage run prepare` y `omv-salt deploy run smartmontools`; vuelve al valor por defecto de la plantilla.
 
 ### Paso 3: Comprobar smartd
 
@@ -261,7 +269,7 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 
 ## Vuelta atrás
 
-- smartd: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'` y `sudo omv-salt deploy run smartmontools`.
+- smartd: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'`, `sudo omv-salt stage run prepare` y `sudo omv-salt deploy run smartmontools`.
 - Actualizaciones: `omv-rpc Notification set` con `"enable":true` y `omv-salt deploy run apticron apt`.
 - SnapRAID: `Cron set` con `"command":"/usr/sbin/omv-snapraid-diff"` y `omv-salt deploy run cron`; los dos ficheros de `/usr/local` pueden quedarse sin efecto.
 - Sin imagen del SSD: los cambios son de variables de OMV, una notificación, una tarea Cron y dos ficheros nuevos; se deshacen sin reinstalar (regla de aprendizajes: pregunta antes de exigir otra imagen; la verificada del 2026-10-28 sigue siendo la de recuperación).
@@ -281,3 +289,5 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | 1.0 | 2026-11-04 | Runbook Agent | Estado cambiado a Aprobado |
 | 1.1 | 2026-11-05 | Runbook Agent | Paso 2: `omv-env set -- CLAVE VALOR` (el valor empieza por `-`) y `get` de comprobación; incidencia del OPS-2026-11-05-rbk18-ruido-correos paso 2. Estado En revisión |
 | 1.1 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
+| 1.2 | 2026-11-05 | Runbook Agent | Paso 2: `omv-salt stage run prepare` y `grep -c` del pillar (=1) antes del deploy de smartmontools; paso idempotente si la variable ya está fijada. Pasos 4 y 7 no lo necesitan (leen la base de datos de OMV, no `/etc/default/openmediavault`). Incidencia del OPS-2026-11-05-rbk18-ruido-correos pasos 2/3. Estado En revisión |
+| 1.2 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
