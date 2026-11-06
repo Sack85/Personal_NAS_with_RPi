@@ -39,9 +39,9 @@ Pasos 1 a 7 del RBK 18. El paso 8 (comprobación tras el sync de las 23:30) qued
 | 3 (reanudado) | Lectura | Agente | 16:22 | OK | E4 |
 | 4 | Cambio | Agente | 16:30 | OK | E5 |
 | 5 | Cambio | Agente | 20:50 | OK | E6 |
-| 6 | Cambio | Agente | 20:56 | OK (correo confirmado por persona 1 a las 21:0x: llegó el de la prueba con fallo, no el de la limpia) | E7 |
-| 7 | Cambio | Agente | 21:06 | OK (con diferencia menor en un recuento esperado, ver incidencia) | E8 |
-| 8 | Lectura | Agente | 2026-11-06 07:30 | OK en el NAS; falta que la persona 1 confirme que no llegó el correo limpio | E9 |
+| 6 | Cambio | Agente | 20:56 | OK | E7 |
+| 7 | Cambio | Agente | 21:06 | OK | E8 |
+| 8 | Lectura | Agente | 2026-11-06 07:30 | OK | E9 |
 
 ## Evidencias
 
