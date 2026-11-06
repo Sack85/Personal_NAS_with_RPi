@@ -3,10 +3,10 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | HLD |
-| **Versión** | 3.0 |
-| **Estado** | Aprobado |
+| **Versión** | 3.1 |
+| **Estado** | En revisión |
 | **Fecha de creación** | 2026-10-09 |
-| **Última modificación** | 2026-10-16 |
+| **Última modificación** | 2026-11-06 |
 | **Autor** | Architect Agent |
 | **Entregable previo** | NRD v1 (1.3, Aprobado) — NRD-2026-10-08-nas-familiar.md |
 
@@ -186,7 +186,7 @@ por UUID (ADR-022). Nunca se usa `/dev/sdX` en un fichero de configuración ni e
 | Sync | Diario a las 23:30 con diff previo, tras el volcado de Immich y el backup de AIO |
 | Umbral de borrados | No sincronizar si hay más de 50 borrados; aviso por correo y sync manual tras revisar |
 | Scrub | Domingo tras el sync, 12 % de los bloques con más de 10 días |
-| Avisos | Informe de cada sync y scrub por correo |
+| Avisos | Correo solo cuando algo falla: filtro `/usr/local/lib/snapraid-aviso/mail` y envoltorio `snapraid-diff-solo-fallos`; el `sendmail` de SnapRAID sigue activo para el umbral de borrados y el disco ausente (ADR-028) |
 
 ### MergerFS
 
@@ -243,7 +243,10 @@ todo Imágenes en D:; los Documentos del otro se consultan por la web, sin sincr
 - Tareas nocturnas de Immich a las 00:00.
 - Móviles: app Immich con copia en segundo plano solo de los álbumes Cámara y WhatsApp, URL
   local por la Wi-Fi de casa y URL externa (Tailscale, solo dentro del horario) configuradas
-  (ADR-026).
+  (ADR-026). La app cambia de URL de forma automática: URL local en el Wi-Fi de casa y URL por
+  Tailscale fuera, sin exponer nada a internet. En el móvil, Tailscale con VPN siempre activa y
+  sin restricciones de batería (tras 6 días con el móvil desconectado y 2000 fotos sin subir;
+  ADR-031).
 
 **Limpieza `immich-limpieza`** (ADR-013): script en el NAS con temporizador systemd diario a las
 00:30. Usa la API de Immich con una clave de API propia **sin el permiso `asset.delete`** (solo
@@ -254,7 +257,7 @@ añade al álbum "Revisar" y los archiva (visibilidad Archivo). Escribe un regis
 movidos para poder deshacerlo. Nunca llama a borrar; el usuario revisa y borra a mano. Cubre
 también las fotos de WhatsApp antiguas de la biblioteca externa.
 
-**Otros**: hd-idle, NUT, smartd con avisos por correo (Gmail con contraseña de aplicación en el
+**Otros**: hd-idle, NUT, smartd con avisos por correo (ignora el atributo 7 con `-I 7` vía `OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES`; el 5, 197 y 198 siguen vigilados; ADR-030) (Gmail con contraseña de aplicación en el
 gestor de contraseñas), Caddy, los temporizadores `tailscale-on/off`, el de renovación de
 `tailscale cert` y `nas-temp`. Monit de OMV: el aviso de carga media (loadavg) está desactivado
 por decisión del usuario (DCP-2026-10-15); el resto de avisos siguen activos.
@@ -364,13 +367,14 @@ si un PC encendido consulta Nextcloud (riesgo en §12).
 ## 10. Actualizaciones y mantenimiento
 
 Mensuales y manuales desde OMV con un plan de actualización (UPD) aprobado; nunca automáticas
-con reinicio. Ventana: sábado por la mañana (en horario de uso, lejos de las tareas de
+con reinicio. Sin aviso diario de paquetes pendientes (notificación de apt y apt-listchanges
+desactivadas): se actualiza una vez al mes con el UPD del maintainer-plugin, a decisión de persona 1 (ADR-029). Ventana: sábado por la mañana (en horario de uso, lejos de las tareas de
 23:00-01:00). Antes: `snapraid status` sin errores, backup de AIO y volcado de Immich de esa
 noche correctos. Después de un cambio de kernel o firmware: `lsblk` con los tres discos SATA y
 `LnkSta` a 8GT/s. Immich se actualiza a mano con su UPD leyendo las notas de versión (cambios
 incompatibles frecuentes); AIO se actualiza solo tras su backup.
 
-Calendario: semanal (correo de SnapRAID y backup de AIO), mensual (SMART del disco de backup + restic + check, filtro,
+Calendario: semanal (correo de SnapRAID solo si falla, y backup de AIO), mensual (SMART del disco de backup + restic + check, filtro,
 SMART 5/197/198/193 y temperatura), semestral (restauración de prueba, prueba del SAI, prueba de
 acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 
@@ -415,6 +419,10 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | ADR-025 | Seagate ST2000LM007 2 TB 2,5" SMR (WDZ03YJJ) como paridad si supera badblocks y test SMART largo; WD Blue pasa a d1; Toshiba retirado; bahías 1 = Seagate, 2 = vacía, 3 = WD, 4 = QVO. Sustituye a ADR-003 y al reparto de bahías de ADR-023 (DCP-2026-10-15) | Comprar un CMR ≥ 2 TB ya; reconstruir el Toshiba con `snapraid fix`; WD como paridad con un disco de datos nuevo de 1 TB | El Toshiba falló; el Seagate ya está en casa y de 2 TB deja margen para datos de 2 TB; SMR es aceptable en paridad (escritura secuencial en el sync); si no pasa, CMR ≥ 2 TB | NRD §3, §5 |
 | ADR-026 | Router Livebox (Orange) sin DNS local: línea en `C:\Windows\System32\drivers\etc\hosts` de cada PC que resuelve `nas.<tailnet>.ts.net` a 192.168.1.11; móviles con Nextcloud por Tailscale solo en horario e Immich con URL local por Wi-Fi; carpeta `Videos` eliminada y usuario `descargas` pospuesto (la Pi 4 es independiente). Cierra la pregunta abierta del router | DNS local en el router (el Livebox no lo permite); Pi-hole/DNS propio en el NAS; Tailscale 24/7 | Nextcloud funciona en casa a cualquier hora sin servicio nuevo ni abrir el horario; los PC son los únicos que sincronizan fuera de horario | NRD §1, §6.1, §7 |
 | ADR-027 | El backup diario de AIO no se activa hasta que haya paridad válida (fase C del DCP-2026-10-15 con sync completo) | Activarlo ya en el pool sin paridad; guardarlo en el SSD | Escribir backups en un pool sin protección da falsa seguridad y añade escrituras durante el DCP; el SSD es lo que protege | NRD §5 |
+| ADR-028 | Correo de SnapRAID solo cuando falla: filtro `/usr/local/lib/snapraid-aviso/mail` y envoltorio `snapraid-diff-solo-fallos`; `sendmail` de SnapRAID activo para umbral de borrados y disco ausente. Sustituye al «informe de cada sync y scrub» de §5 y §10 | Apagar `sendmail` de SnapRAID | Apagarlo perdería los avisos de fallo; el ruido de los informes correctos hace que se dejen de leer los que importan (RBK 18) | NRD §6, §8 |
+| ADR-029 | Sin aviso diario de paquetes pendientes (notificación de apt y apt-listchanges desactivadas); actualizaciones una vez al mes con el UPD del maintainer-plugin, a decisión de persona 1 | Aviso diario por correo; actualizaciones automáticas | El aviso diario es ruido; las automáticas contradicen «nunca automáticas con reinicio» (§10) | NRD §8 |
+| ADR-030 | smartd ignora el atributo 7 (`-I 7`) vía `OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES`; el 5, 197 y 198 siguen vigilados | Ignorar más atributos; apagar los avisos SMART | El atributo 7 genera avisos sin valor; los de sectores reasignados y pendientes protegen los datos | NRD §6.2 |
+| ADR-031 | Immich móvil con cambio automático de URL (local en el Wi-Fi de casa, Tailscale fuera) y Tailscale del móvil con VPN siempre activa y sin restricciones de batería. Concreta ADR-026 | URL manual; abrir Immich a internet; Tailscale solo bajo demanda | 6 días con el móvil desconectado y 2000 fotos sin subir; no se expone nada (ADR-018) | NRD §2.1, §7 |
 
 ## 12. Riesgos
 
@@ -433,6 +441,7 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | Sin versiones de Nextcloud en Documentos externos (riesgo aceptado por el usuario, ADR-008) | Alta | Medio | Papelera 30 días, SnapRAID (24 h) y restic mensual |
 | PC encendido de noche mantiene despiertos los discos | Media | Bajo | Comprobar `hdparm -C` y registro de hd-idle en la revisión semanal; pausar el cliente de noche |
 | Ransomware propagado a los D: de los PC | Baja | Alto | restic offline mensual; papelera de Nextcloud como primer recurso |
+| Tres reinicios no planificados (2026-10-31, 11-01, 11-04) con el SSD por USB 2 a 480M y sin rastro en el espejo del kernel | Media | Alto | Cable USB 3 directo y comprobación de enlace en UPD y MNT; protección del RBK 17; la pregunta 3 del RBK 17 (`ramoops-pi5` + `systemd-pstore` para conservar el panic) sigue como decisión abierta de persona 1 |
 | Pool lleno antes de 5 años | Media | Medio | Revisión mensual de espacio; bahía 2 libre y DCP para disco mayor |
 | Un único disco de backup sin copia fuera de casa durante la copia | Baja | Alto | Copia en el día; mejora futura con segundo disco rotatorio |
 
@@ -442,6 +451,7 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 |---|---|---|
 | ¿Hay SAI con USB compatible con NUT? (NRD) | Persona 1 | 2026-10-31 |
 | ¿Umbral de similitud de la búsqueda inteligente para la limpieza? Se fija con una prueba sobre 200 fotos en el runbook de Immich | Persona 1 | Runbook de Immich |
+| ¿Activar `ramoops-pi5` + `systemd-pstore` para conservar el mensaje del panic? (pregunta 3 del RBK 17; toca `config.txt`) | Persona 1 | Sin fecha |
 
 ## 13. Historial de versiones
 
@@ -456,3 +466,4 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | 2.1 | 2026-10-09 | Architect Agent | Estado cambiado a Aprobado |
 | 3.0 | 2026-10-16 | Architect Agent | Acceso a Nextcloud con MagicDNS + `tailscale cert` + Caddy y AIO en modo reverse proxy, sin deSEC (ADR-024, sustituye a ADR-005); discos tras DCP-2026-10-15: Toshiba retirado, WD a d1, Seagate 2 TB SMR como paridad, nuevas bahías (ADR-025, sustituye a ADR-003 y ADR-023); Livebox sin DNS local, hosts en los PC, carpeta Videos eliminada, `descargas` pospuesto (ADR-026, cierra la pregunta del router); horario de Tailscale con franja L-V 11:30-14:30 (ADR-010); backup de AIO tras paridad válida (ADR-027); usuarios `carlos` y `sabrina`; aviso loadavg de monit desactivado |
 | 3.0 | 2026-10-16 | Architect Agent | Estado cambiado a Aprobado (visto bueno del usuario 2026-10-16) |
+| 3.1 | 2026-11-06 | Architect Agent | Reflejado el RBK 18 (OPS-2026-11-05-rbk18-ruido-correos): correo de SnapRAID solo si falla (ADR-028), sin aviso diario de paquetes (ADR-029), smartd con `-I 7` (ADR-030), Immich móvil con cambio automático de URL y Tailscale siempre activo (ADR-031); riesgo de tres reinicios no planificados y pregunta 3 del RBK 17 abierta |
