@@ -41,6 +41,7 @@ Pasos 1 a 7 del RBK 18. El paso 8 (comprobación tras el sync de las 23:30) qued
 | 5 | Cambio | Agente | 20:50 | OK | E6 |
 | 6 | Cambio | Agente | 20:56 | OK (correo confirmado por persona 1 a las 21:0x: llegó el de la prueba con fallo, no el de la limpia) | E7 |
 | 7 | Cambio | Agente | 21:06 | OK (con diferencia menor en un recuento esperado, ver incidencia) | E8 |
+| 8 | Lectura | Agente | 2026-11-06 07:30 | OK en el NAS; falta que la persona 1 confirme que no llegó el correo limpio | E9 |
 
 ## Evidencias
 
@@ -117,6 +118,16 @@ grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined -> 0 (e
 grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined -> 1
 ```
 
+### E9 Paso 8 (2026-11-06 07:30)
+
+```
+journal: 23:30:57 Informe de exito no enviado: SnapRAID - Sync/Scrub Job COMPLETED (una sola linea)
+snapraid.log: SYNC Job finished 23:30:57; Added 1166, Updated 2; scrub no ejecutado (ciclo 2 de 7)
+snapraid status: No error detected
+verificacion final: -I 7 =1; apticron cron.daily No such file; "sendmail": true; ultima linea script cron = snapraid-diff-solo-fallos
+grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined -> 0 (misma incidencia del paso 7)
+```
+
 ## Incidencias
 
 | Paso | Qué pasó | Acción | Seguimiento |
@@ -129,7 +140,12 @@ grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined -> 1
 
 | Comprobación | Resultado | OK |
 |---|---|---|
-| Pendiente | | |
+| smartd ignora el 7 | grep -c = 1 | Si |
+| Sin aviso de actualizaciones | cron.daily/openmediavault-apticron no existe | Si |
+| Tarea con el envoltorio | Script generado la llama; grep -c en /etc/cron.d da 0 (esperado del RBK erroneo, incidencia 7) | Si, con incidencia |
+| Avisos de fallo conservados | sendmail true | Si |
+| Estado SnapRAID | No error detected | Si |
+| Bandeja de la persona 1 sin COMPLETED limpio | Pendiente de confirmar | Pendiente |
 
 ## Cambios en la configuración
 
@@ -143,3 +159,4 @@ grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined -> 1
 | 1.1 | 2026-11-05 | Operator Agent | Reanudada en el paso 2 con RBK 1.1; parada en el paso 3 |
 | 1.2 | 2026-11-05 | Operator Agent | Reanudada en el paso 2 con RBK 1.2; pasos 2 a 6 OK; pausa antes del paso 7 a la espera de confirmar el correo de prueba |
 | 1.3 | 2026-11-05 | Operator Agent | Reanudada en el paso 7: confirmado el correo del paso 6; paso 7 OK (tarea Cron al envoltorio); pausa hasta el sync de las 23:30 para el paso 8 |
+| 1.4 | 2026-11-06 | Operator Agent | Reanudada en el paso 8: sync de las 23:30 filtrado en el journal, snapraid sin errores; pendiente confirmar la bandeja y corregir el esperado del paso 7 en el RBK |

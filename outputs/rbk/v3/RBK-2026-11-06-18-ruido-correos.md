@@ -4,10 +4,10 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
-| **Versión** | 1.2 |
+| **Versión** | 1.3 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
-| **Última modificación** | 2026-11-05 |
+| **Última modificación** | 2026-11-06 |
 | **Autor** | Runbook Agent |
 | **Entregable previo** | HLD v3 (3.0, Aprobado) — HLD-2026-10-16-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
@@ -232,7 +232,7 @@ ssh -t nas "sudo omv-rpc Cron set '{\"uuid\":\"1e921904-2c6c-428f-97d5-0079e7387
 ssh -t nas "sudo omv-salt deploy run cron"
 ```
 
-Esperado: sin `Failed`; `ssh nas 'sudo cat /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374 | tail -1; grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined'` da `/usr/local/sbin/snapraid-diff-solo-fallos` y `1`; `grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined` da `1` (la otra tarea con el mismo nombre está desactivada y no aparece).
+Esperado: sin `Failed`; `ssh nas 'sudo cat /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374 | tail -1; grep -c snapraid-diff-solo-fallos /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374'` da `/usr/local/sbin/snapraid-diff-solo-fallos` y `1` (el comando está en el script generado por OMV; `/etc/cron.d/openmediavault-userdefined` solo llama a ese script y da 0); `grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined` da `1` (la otra tarea con el mismo nombre está desactivada y no aparece).
 
 Si falla: repite el `Cron set` con `"command":"/usr/sbin/omv-snapraid-diff"` y el `omv-salt deploy run cron`.
 
@@ -263,7 +263,7 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 |---|---|---|
 | smartd ignora el 7 | `ssh nas 'grep -c "^DEFAULT .*-I 7" /etc/smartd.conf'` | `1` |
 | Sin aviso de actualizaciones | `ssh nas 'ls /etc/cron.daily/openmediavault-apticron 2>&1'` | `No such file or directory` |
-| Tarea con el envoltorio | `ssh nas 'grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined'` | `1` |
+| Tarea con el envoltorio | `ssh nas 'grep -c snapraid-diff-solo-fallos /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374; grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined'` | `1` y `1` (script generado y línea de cron de las 23:30) |
 | Avisos de fallo conservados | `ssh nas 'sudo omv-confdbadm read conf.service.snapraid \| grep -o "\"sendmail\": [a-z]*"'` | `"sendmail": true` |
 | Estado SnapRAID | `ssh nas 'sudo snapraid status \| tail -3'` | sin errores |
 
@@ -291,3 +291,5 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | 1.1 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
 | 1.2 | 2026-11-05 | Runbook Agent | Paso 2: `omv-salt stage run prepare` y `grep -c` del pillar (=1) antes del deploy de smartmontools; paso idempotente si la variable ya está fijada. Pasos 4 y 7 no lo necesitan (leen la base de datos de OMV, no `/etc/default/openmediavault`). Incidencia del OPS-2026-11-05-rbk18-ruido-correos pasos 2/3. Estado En revisión |
 | 1.2 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
+| 1.3 | 2026-11-06 | Runbook Agent | Paso 7 y Verificación final: el esperado `grep -c` se hace sobre el script generado `/var/lib/openmediavault/cron.d/userdefined-1e92...` (el cron.d solo lo llama y da 0) y la línea `30 23 * * *` aparece una vez. Incidencia del OPS-2026-11-05-rbk18-ruido-correos paso 7. Estado En revisión |
+| 1.3 | 2026-11-06 | Runbook Agent | Estado cambiado a Aprobado |
