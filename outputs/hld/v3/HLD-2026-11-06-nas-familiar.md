@@ -4,7 +4,7 @@
 |---|---|
 | **Documento** | HLD |
 | **Versión** | 3.1 |
-| **Estado** | En revisión |
+| **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-09 |
 | **Última modificación** | 2026-11-06 |
 | **Autor** | Architect Agent |
@@ -467,3 +467,4 @@ acceso de persona 2), verano (alarmas de 45 °C del periodo e higrómetro).
 | 3.0 | 2026-10-16 | Architect Agent | Acceso a Nextcloud con MagicDNS + `tailscale cert` + Caddy y AIO en modo reverse proxy, sin deSEC (ADR-024, sustituye a ADR-005); discos tras DCP-2026-10-15: Toshiba retirado, WD a d1, Seagate 2 TB SMR como paridad, nuevas bahías (ADR-025, sustituye a ADR-003 y ADR-023); Livebox sin DNS local, hosts en los PC, carpeta Videos eliminada, `descargas` pospuesto (ADR-026, cierra la pregunta del router); horario de Tailscale con franja L-V 11:30-14:30 (ADR-010); backup de AIO tras paridad válida (ADR-027); usuarios `carlos` y `sabrina`; aviso loadavg de monit desactivado |
 | 3.0 | 2026-10-16 | Architect Agent | Estado cambiado a Aprobado (visto bueno del usuario 2026-10-16) |
 | 3.1 | 2026-11-06 | Architect Agent | Reflejado el RBK 18 (OPS-2026-11-05-rbk18-ruido-correos): correo de SnapRAID solo si falla (ADR-028), sin aviso diario de paquetes (ADR-029), smartd con `-I 7` (ADR-030), Immich móvil con cambio automático de URL y Tailscale siempre activo (ADR-031); riesgo de tres reinicios no planificados y pregunta 3 del RBK 17 abierta |
+| 3.1 | 2026-11-06 | Architect Agent | Estado cambiado a Aprobado (visto bueno del usuario «go» 2026-11-06; pendiente abierta: ramoops) |
