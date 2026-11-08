@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
-| **Versión** | 1.3 |
+| **Versión** | 1.4 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
-| **Última modificación** | 2026-11-06 |
+| **Última modificación** | 2026-11-08 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v3 (3.0, Aprobado) — HLD-2026-10-16-nas-familiar.md |
+| **Entregable previo** | HLD v3 (3.1, Aprobado) — HLD-2026-11-06-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 30 min + comprobación a la mañana siguiente (tras el sync de las 23:30) |
 
@@ -293,3 +293,5 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | 1.2 | 2026-11-05 | Runbook Agent | Estado cambiado a Aprobado |
 | 1.3 | 2026-11-06 | Runbook Agent | Paso 7 y Verificación final: el esperado `grep -c` se hace sobre el script generado `/var/lib/openmediavault/cron.d/userdefined-1e92...` (el cron.d solo lo llama y da 0) y la línea `30 23 * * *` aparece una vez. Incidencia del OPS-2026-11-05-rbk18-ruido-correos paso 7. Estado En revisión |
 | 1.3 | 2026-11-06 | Runbook Agent | Estado cambiado a Aprobado |
+| 1.4 | 2026-11-08 | Runbook Agent | Solo la cita del HLD: de HLD 3.0 a HLD 3.1 (Aprobado, 2026-11-06), sin cambiar pasos ni comandos. Anotado sin cambiar: la «Diferencia con el HLD» de la introducción ya no aplica, porque el HLD 3.1 recoge este RBK en ADR-028 a 031; ningún paso los contradice. Estado En revisión |
+| 1.4 | 2026-11-08 | Runbook Agent | Estado cambiado a Aprobado (cambio solo de cita; persona 1: «sigue») |

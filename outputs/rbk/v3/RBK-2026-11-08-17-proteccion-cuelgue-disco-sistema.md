@@ -4,12 +4,12 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 17 — Protección ante el cuelgue del disco del sistema |
-| **Versión** | 3.1 |
+| **Versión** | 3.2 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-10-30 |
-| **Última modificación** | 2026-10-31 |
+| **Última modificación** | 2026-11-08 |
 | **Autor** | Runbook Agent |
-| **Entregable previo** | HLD v3 (3.0, Aprobado) — HLD-2026-10-16-nas-familiar.md |
+| **Entregable previo** | HLD v3 (3.1, Aprobado) — HLD-2026-11-06-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
 | **Duración estimada** | 50 min en caliente, sin reinicio (pasos 1 a 8) + 30 min cuando llegue el cable (pasos 9 a 11: apagado, cable y comprobaciones) |
 
@@ -730,3 +730,5 @@ Esperado: la Pi vuelve a responder a `ssh nas`.
 | 3.0 | 2026-10-30 | Runbook Agent | Creación tras el segundo cuelgue (2026-10-30): espejo de los mensajes del kernel en el QVO, panic ante tareas bloqueadas con reinicio a 10 s, constancia del enlace del SSD a 480M y verificación con el cable USB 3 |
 | 3.1 | 2026-10-31 | Runbook Agent | Decisiones de persona 1 del 2026-10-30 antes de aprobar. (a) Paso 8 nuevo: raíz ext4 del XG5 a `panic` con `tune2fs -e panic` (superbloque, sin tocar fstab) y `mount -o remount,errors=panic /`, porque el kernel solo lee el superbloque al montar (`fs/ext4/super.c`); previa (raíz por by-id, `clean`, sin errores registrados), comprobación con `tune2fs -l` y `/proc/fs/ext4/*/options`, riesgo de bucle de reinicios y su salida (montaje en WSL con `errors=continue` y `tune2fs -e continue UUID=…`), vuelta atrás y comprobación tras el arranque (paso 10). (b) Sin imagen nueva: el paso 4 solo comprueba la imagen verificada del 2026-10-28, vuelta atrás del caso extremo. El reinicio de verificación es el apagado del cambio de cable: desaparece el reinicio aparte (antiguo paso 8) y el cable pasa al paso 9 y las comprobaciones tras el arranque al 10 (antes 10 y 9). Límite, «Tras un cuelgue» (`fsck.log`), verificación final y preguntas 2, 3 y 5 al día |
 | 3.1 | 2026-10-31 | Runbook Agent | Estado cambiado a Aprobado (persona 1: «a) Ampliar la protección OK; b OK», 2026-10-30/31; el remontaje `errors=panic` del paso 8 es la forma de que (a) valga ya, dentro de lo aprobado) |
+| 3.2 | 2026-11-08 | Runbook Agent | Solo la cita del HLD: de HLD 3.0 a HLD 3.1 (Aprobado, 2026-11-06), sin cambiar pasos ni comandos. Revisado contra ADR-028 a 031: ningún paso los contradice. Nota: la pregunta 1 («caja USB 3» frente a 480M) y la pregunta 3 (ramoops) siguen abiertas en el HLD 3.1. Estado En revisión |
+| 3.2 | 2026-11-08 | Runbook Agent | Estado cambiado a Aprobado (cambio solo de cita; persona 1: «sigue») |
