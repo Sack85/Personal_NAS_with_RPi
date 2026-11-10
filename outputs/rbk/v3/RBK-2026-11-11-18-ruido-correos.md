@@ -4,14 +4,14 @@
 |---|---|
 | **Documento** | RBK |
 | **Fase** | 18 — Ruido de correos |
-| **Versión** | 1.4 |
+| **Versión** | 1.5 |
 | **Estado** | Aprobado |
 | **Fecha de creación** | 2026-11-04 |
-| **Última modificación** | 2026-11-08 |
+| **Última modificación** | 2026-11-11 |
 | **Autor** | Runbook Agent |
 | **Entregable previo** | HLD v3 (3.1, Aprobado) — HLD-2026-11-06-nas-familiar.md |
 | **Riesgo máximo** | Cambio |
-| **Duración estimada** | 30 min + comprobación a la mañana siguiente (tras el sync de las 23:30) |
+| **Duración estimada** | 40 min + comprobación a la mañana siguiente (tras el sync de las 23:30) |
 
 ## Objetivo
 
@@ -30,6 +30,8 @@ Qué genera cada correo (comprobado en el NAS en solo lectura el 2026-11-04):
 | Cron - SnapRAID diff+sync diario | Tarea Cron de OMV `1e921904-…` (`sendemail` true, `mail -E`): solo manda si la tarea imprime algo | Se deja como está (es aviso de fallo) |
 | N package update(s) available | `apticron` desde `/etc/cron.daily/openmediavault-apticron`; lo crea `omv/deploy/apticron/20cron.sls` solo si la notificación `apt` de OMV está activa (`conf.system.notification.notification`, uuid `5334afb5-…`) | `omv-rpc Notification set` con `enable` false + `omv-salt deploy run apticron apt` |
 
+Efecto colateral (hallazgo del 2026-11-11 al revisar los correos desde el 5 de noviembre; correo diario «Pending configuration changes» de las ~07:35, 6 desde el 06-11): los `omv-rpc ... set` de los pasos 4 y 7 marcan módulos como pendientes en `/var/lib/openmediavault/dirtymodules.json` y el `omv-salt deploy run` a mano no limpia ese marcador. El paso 9 los aplica con la forma oficial de OMV (`omv-rpc Config applyChanges`, esquema `rpc.config.json`: `modules` y `force`, ambos obligatorios; método en `/usr/share/openmediavault/engined/rpc/config.inc`, comprobado en solo lectura el 2026-11-11).
+
 Consecuencia de la notificación `apt` apagada: desaparece también el listado de cambios de apt-listchanges por correo (`/etc/apt/listchanges.conf.d/98openmediavault-mail.conf`). No afecta a `apt` ni al aviso de `unattended-upgrades`.
 
 **Diferencia con el HLD**: el HLD v3 §5 dice «Informe de cada sync y scrub por correo» y §10 cuenta «correo de SnapRAID» en el calendario semanal. Con este RBK ya no hay informe de éxito. Pide `/architect-plugin:update-hld` (ADR nuevo) antes o justo después de aprobar este RBK.
@@ -40,6 +42,7 @@ Consecuencia de la notificación `apt` apagada: desaparece también el listado d
 - [ ] Sin sesión web: todos los pasos los hace el Agente por SSH, una orden por línea; no pegues varias líneas tras `ssh nas`
 - [ ] `state/config/usr/local/sbin/snapraid-diff-solo-fallos` y `state/config/usr/local/lib/snapraid-aviso/mail` existen en el repo (PC) y pasan `bash -n`
 - [ ] Reinicio no necesario: ningún paso lo pide
+- [ ] El paso 9 reinicia `monit`, `rsyslog`, `smartd` y regenera cron: también fuera de la ventana 22:30-00:30
 
 ## Pasos
 
@@ -257,6 +260,41 @@ Esperado: una línea «Informe de exito no enviado: SnapRAID - Sync/Scrub Job CO
 
 Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNING` o un contador de errores distinto de 0 la hace pasar a propósito (el filtro falla hacia el lado del aviso); si es un `WARNING` fijo e inofensivo, anótalo en el OPS y se ajusta el patrón en un `update-rbk`. Si no se registra el sync en `snapraid.log`, aplica la vuelta atrás del paso 7.
 
+### Paso 9: Aplicar los cambios pendientes de OMV
+
+| Campo | Valor |
+|---|---|
+| **Riesgo** | Cambio |
+| **Ejecuta** | Agente |
+| **Dónde** | NAS por SSH |
+| **HLD** | §10 |
+
+Comprobación previa (Lectura): pasos 2 a 7 hechos y hora fuera de 22:30-00:30. Lista los módulos pendientes y su origen:
+
+```bash
+ssh nas 'cat /var/lib/openmediavault/dirtymodules.json'
+```
+
+Esperado (2026-11-11): `["apt","apticron","monit","rsyslog","smartmontools","cron"]`. Origen comprobado en solo lectura: `apt` y `apticron` (paso 4: notificación `apt`); `monit` y `rsyslog` también los marca la notificación (los módulos `monit.inc` y `syslog.inc` escuchan `conf.system.notification.notification`, así que son del paso 4 y no de los RBK 16 y 17, cuyos OPS no los tocan); `smartmontools` (paso 2) y `cron` (paso 7). Si aparece un módulo que no es de esta lista, para y avisa a la persona usuaria: es de otro cambio y no se aplica sin saber cuál.
+
+Comando (una orden por línea; usa exactamente los módulos que devolvió la previa; `force` false para tocar solo lo pendiente):
+
+```bash
+ssh -t nas "sudo omv-rpc Config applyChanges '{\"modules\":[\"apt\",\"apticron\",\"monit\",\"rsyslog\",\"smartmontools\",\"cron\"],\"force\":false}'"
+```
+
+```bash
+ssh nas 'cat /var/lib/openmediavault/dirtymodules.json; systemctl is-active monit rsyslog smartmontools cron'
+```
+
+```bash
+ssh nas 'grep -c snapraid-diff-solo-fallos /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374; grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined; grep -c -e "-I 7" /etc/smartd.conf; ls /etc/cron.daily/openmediavault-apticron 2>&1'
+```
+
+Esperado: el `applyChanges` devuelve la lista de módulos procesados y sin error; `dirtymodules.json` queda `[]`; `active` cuatro veces; luego `1`, `1`, `1` y `No such file or directory` (el cron de SnapRAID sigue llamando al envoltorio, smartd conserva `-I 7` y no vuelve el aviso de apt). Aplicar no cambia valores: despliega lo que los pasos 2, 4 y 7 ya fijaron en la base de datos y en el pillar.
+
+Si falla: si `applyChanges` da error, no edites `dirtymodules.json` a mano; copia el mensaje al OPS y repite con un solo módulo (`"modules":["monit"]`) para localizar el que falla. Si un servicio no está `active`, `ssh nas 'sudo journalctl -u <servicio> -n 20 --no-pager'` y para. Si el cron o `smartd.conf` no cuadran, aplica la vuelta atrás del paso 7 o del 2. Mañana a las 07:35 el correo seguirá llegando si el fichero no quedó en `[]`.
+
 ## Verificación final
 
 | Comprobación | Comando | Esperado |
@@ -266,12 +304,16 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | Tarea con el envoltorio | `ssh nas 'grep -c snapraid-diff-solo-fallos /var/lib/openmediavault/cron.d/userdefined-1e921904-2c6c-428f-97d5-0079e7387374; grep -c "30 23 \* \* \*" /etc/cron.d/openmediavault-userdefined'` | `1` y `1` (script generado y línea de cron de las 23:30) |
 | Avisos de fallo conservados | `ssh nas 'sudo omv-confdbadm read conf.service.snapraid \| grep -o "\"sendmail\": [a-z]*"'` | `"sendmail": true` |
 | Estado SnapRAID | `ssh nas 'sudo snapraid status \| tail -3'` | sin errores |
+| Sin cambios pendientes en OMV | `ssh nas 'cat /var/lib/openmediavault/dirtymodules.json'` | `[]` |
+| Servicios activos | `ssh nas 'systemctl is-active monit rsyslog smartmontools cron'` | `active` cuatro veces |
+| Sin correo «Pending configuration changes» | La persona usuaria comprueba su bandeja mañana a las 07:35 (más el `dirtymodules.json` a esa hora) | No llega el correo y el fichero sigue en `[]` |
 
 ## Vuelta atrás
 
 - smartd: `ssh nas 'sudo omv-env unset OMV_SMARTMONTOOLS_DEFAULTDIRECTIVES'`, `sudo omv-salt stage run prepare` y `sudo omv-salt deploy run smartmontools`.
 - Actualizaciones: `omv-rpc Notification set` con `"enable":true` y `omv-salt deploy run apticron apt`.
 - SnapRAID: `Cron set` con `"command":"/usr/sbin/omv-snapraid-diff"` y `omv-salt deploy run cron`; los dos ficheros de `/usr/local` pueden quedarse sin efecto.
+- Paso 9: no tiene vuelta atrás propia (solo despliega lo ya fijado); si un servicio falla, se deshace el paso que lo cambió (2, 4 o 7).
 - Sin imagen del SSD: los cambios son de variables de OMV, una notificación, una tarea Cron y dos ficheros nuevos; se deshacen sin reinstalar (regla de aprendizajes: pregunta antes de exigir otra imagen; la verificada del 2026-10-28 sigue siendo la de recuperación).
 
 ## Evidencias
@@ -280,6 +322,7 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 - Salida de la prueba del paso 6 (journal y correo recibido).
 - Copias en `state/config/usr/local/lib/snapraid-aviso/mail` y `state/config/usr/local/sbin/snapraid-diff-solo-fallos`; tarea Cron en `state/config/omv/cron-snapraid-setList.json` (guardar el JSON del paso 7) y variable en `state/applied.yaml`.
 - Salida del paso 8 de la mañana siguiente.
+- Salida del paso 9: `dirtymodules.json` antes y después, módulos procesados y servicios activos; y la bandeja de la mañana siguiente a las 07:35.
 
 ## Historial de versiones
 
@@ -295,3 +338,5 @@ Si falla: si el informe limpio sigue llegando, mira su cuerpo: una línea `WARNI
 | 1.3 | 2026-11-06 | Runbook Agent | Estado cambiado a Aprobado |
 | 1.4 | 2026-11-08 | Runbook Agent | Solo la cita del HLD: de HLD 3.0 a HLD 3.1 (Aprobado, 2026-11-06), sin cambiar pasos ni comandos. Anotado sin cambiar: la «Diferencia con el HLD» de la introducción ya no aplica, porque el HLD 3.1 recoge este RBK en ADR-028 a 031; ningún paso los contradice. Estado En revisión |
 | 1.4 | 2026-11-08 | Runbook Agent | Estado cambiado a Aprobado (cambio solo de cita; persona 1: «sigue») |
+| 1.5 | 2026-11-11 | Runbook Agent | Paso 9 nuevo: `omv-rpc Config applyChanges` con los módulos de `dirtymodules.json` (apt, apticron, monit, rsyslog, smartmontools, cron) para parar el correo diario «Pending configuration changes» (6 desde el 06-11); origen de cada módulo comprobado en solo lectura (todos de los pasos 2, 4 y 7); verificación final ampliada. Estado En revisión |
+| 1.5 | 2026-11-11 | Runbook Agent | Estado cambiado a Aprobado (persona 1: «GO a todo») |
