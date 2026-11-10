@@ -42,6 +42,8 @@ Pasos 1 a 7 del RBK 18. El paso 8 (comprobación tras el sync de las 23:30) qued
 | 6 | Cambio | Agente | 20:56 | OK | E7 |
 | 7 | Cambio | Agente | 21:06 | OK | E8 |
 | 8 | Lectura | Agente | 2026-11-06 07:30 | OK | E9 |
+| 8 (confirmado por evidencia del NAS, RBK 1.5) | Lectura | Agente | 2026-11-11 00:37 | OK | E10 |
+| 9 | Cambio | Agente | 2026-11-11 01:07 | OK | E11 |
 
 ## Evidencias
 
@@ -128,6 +130,26 @@ verificacion final: -I 7 =1; apticron cron.daily No such file; "sendmail": true;
 grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined -> 0 (misma incidencia del paso 7)
 ```
 
+### E10 Paso 8 (lectura del 2026-11-11, sobre RBK 1.5)
+
+```
+Desde 2026-11-05 23:00: correos "Sync/Scrub Job COMPLETED" enviados = 0
+Filtro: "Informe de exito no enviado" las noches del 06, 07, 08 y 09
+Correos enviados desde 05 21:30: 6 "Pending configuration changes" (diario ~07:35 y uno el 11 a las 00:42)
+```
+Paso 8 confirmado por evidencia del NAS, no por la bandeja de persona 1 (pendiente).
+
+### E11 Paso 9 (2026-11-11 01:07, fuera de ventana 22:30-00:30)
+
+```
+previa dirtymodules.json: apt, apticron, monit, rsyslog, smartmontools, cron (igual que lo esperado)
+applyChanges -> ["apt","apticron","monit","rsyslog","smartmontools","cron"] sin error
+dirtymodules.json despues: []
+systemctl is-active monit rsyslog smartmontools cron: active x4
+grep -c envoltorio (script generado) = 1; "30 23 * * *" = 1; "-I 7" smartd.conf = 1
+ls cron.daily/openmediavault-apticron: No such file or directory
+```
+
 ## Incidencias
 
 | Paso | Qué pasó | Acción | Seguimiento |
@@ -146,6 +168,8 @@ grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined -> 0 (m
 | Avisos de fallo conservados | sendmail true | Si |
 | Estado SnapRAID | No error detected | Si |
 | Bandeja de la persona 1 sin COMPLETED limpio | Pendiente de confirmar | Pendiente |
+| dirtymodules.json vacio tras el paso 9 | `[]` | Si |
+| Sin "Pending configuration changes" a las 07:35 del 2026-11-12 | Pendiente de comprobar | Pendiente |
 
 ## Cambios en la configuración
 
@@ -160,3 +184,4 @@ grep -c snapraid-diff-solo-fallos /etc/cron.d/openmediavault-userdefined -> 0 (m
 | 1.2 | 2026-11-05 | Operator Agent | Reanudada en el paso 2 con RBK 1.2; pasos 2 a 6 OK; pausa antes del paso 7 a la espera de confirmar el correo de prueba |
 | 1.3 | 2026-11-05 | Operator Agent | Reanudada en el paso 7: confirmado el correo del paso 6; paso 7 OK (tarea Cron al envoltorio); pausa hasta el sync de las 23:30 para el paso 8 |
 | 1.4 | 2026-11-06 | Operator Agent | Reanudada en el paso 8: sync de las 23:30 filtrado en el journal, snapraid sin errores; pendiente confirmar la bandeja y corregir el esperado del paso 7 en el RBK |
+| 1.5 | 2026-11-11 | Operator Agent | Reanudada en el paso 9 (RBK 1.5): paso 8 confirmado por evidencia del NAS; paso 9 OK (dirtymodules vacio, servicios activos). Pendiente: bandeja de persona 1 y ausencia del correo de las 07:35 de mañana; no se cierra el OPS |
